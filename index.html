@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ledger</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+
+<style>
+  :root{
+    --bg:#f5f6f5; --surface:#ffffff; --surface-2:#eef0ee; --border:#dde1de;
+    --ink:#12181a; --ink-dim:#5c6a68; --ink-faint:#8b9694;
+    --accent:#0f7d72; --accent-ink:#ffffff; --accent-soft:#e2f1ee;
+    --good:#1f8a4c; --good-soft:#e5f5ea;
+    --warn:#a8721c; --warn-soft:#faf0dc;
+    --bad:#c23b32; --bad-soft:#fbe9e7;
+    --shadow: 0 1px 2px rgba(20,30,28,.06), 0 8px 24px -12px rgba(20,30,28,.12);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0b1211; --surface:#0f1917; --surface-2:#15221f; --border:#223330;
+      --ink:#eef3f1; --ink-dim:#93a5a1; --ink-faint:#5e716d;
+      --accent:#3fd6c4; --accent-ink:#06201c; --accent-soft:#122b27;
+      --good:#4fbd7c; --good-soft:#12291b;
+      --warn:#e0a83e; --warn-soft:#2c2210;
+      --bad:#e2645c; --bad-soft:#2c1614;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0b1211; --surface:#0f1917; --surface-2:#15221f; --border:#223330;
+    --ink:#eef3f1; --ink-dim:#93a5a1; --ink-faint:#5e716d;
+    --accent:#3fd6c4; --accent-ink:#06201c; --accent-soft:#122b27;
+    --good:#4fbd7c; --good-soft:#12291b;
+    --warn:#e0a83e; --warn-soft:#2c2210;
+    --bad:#e2645c; --bad-soft:#2c1614;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  body{ background:var(--bg); color:var(--ink); font-family:'Inter',system-ui,sans-serif; }
+  h1,h2,h3,.num-display{ font-family:'Fraunces',Georgia,serif; text-wrap:balance; }
+  .mono{ font-family:'IBM Plex Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; }
+  a{ color:var(--accent); }
+  button{ font-family:inherit; }
+  ::selection{ background:var(--accent-soft); }
+
+  #app{ min-height:100%; display:flex; flex-direction:column; }
+
+  /* ---------- Login ---------- */
+  .login-screen{
+    min-height:100%; display:flex; align-items:center; justify-content:center;
+    padding: 32px 20px; background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, var(--accent-soft), transparent 60%),
+      var(--bg);
+  }
+  .login-card{
+    width:100%; max-width:380px; background:var(--surface); border:1px solid var(--border);
+    border-radius:20px; padding:32px 28px; box-shadow:var(--shadow);
+  }
+  .login-brand{ display:flex; align-items:center; gap:10px; margin-bottom:28px; }
+  .login-mark{
+    width:36px; height:36px; border-radius:9px; background:var(--accent); color:var(--accent-ink);
+    display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-weight:600; font-size:18px; flex:none;
+  }
+  .login-brand-text{ font-family:'Fraunces',serif; font-weight:600; font-size:19px; letter-spacing:.2px; }
+  .login-sub{ color:var(--ink-dim); font-size:13.5px; margin:2px 0 0; }
+  h1.login-title{ font-size:22px; font-weight:600; margin:0 0 4px; }
+  p.login-desc{ color:var(--ink-dim); font-size:14px; margin:0 0 24px; line-height:1.5; }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12.5px; font-weight:600; color:var(--ink-dim); margin-bottom:6px; letter-spacing:.2px; }
+  .field input{
+    width:100%; padding:12px 13px; border-radius:10px; border:1px solid var(--border);
+    background:var(--surface-2); color:var(--ink); font-size:15px; font-family:inherit;
+  }
+  .field input:focus{ outline:2px solid var(--accent); outline-offset:-1px; }
+  .btn{
+    width:100%; padding:12px 16px; border-radius:10px; border:none; background:var(--accent);
+    color:var(--accent-ink); font-weight:600; font-size:15px; cursor:pointer; margin-top:6px;
+  }
+  .btn:active{ transform:translateY(1px); }
+  .btn:disabled{ opacity:.6; cursor:default; }
+  .btn-ghost{ background:transparent; border:1px solid var(--border); color:var(--ink); }
+  .login-error{
+    background:var(--bad-soft); color:var(--bad); font-size:13px; padding:10px 12px;
+    border-radius:9px; margin-bottom:14px; display:none; line-height:1.4;
+  }
+  .demo-box{
+    margin-top:20px; padding:13px 14px; border-radius:12px; background:var(--surface-2);
+    border:1px solid var(--border); font-size:12.5px; color:var(--ink-dim); line-height:1.7;
+  }
+  .demo-box b{ color:var(--ink); }
+  .demo-row{ display:flex; justify-content:space-between; gap:8px; cursor:pointer; }
+  .demo-row:hover{ color:var(--accent); }
+
+  /* ---------- App shell ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter:blur(10px); border-bottom:1px solid var(--border);
+    padding: max(12px, env(safe-area-inset-top)) 16px 12px;
+  }
+  .topbar-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .brand-mini{ display:flex; align-items:center; gap:9px; }
+  .brand-mini .login-mark{ width:28px; height:28px; font-size:14px; border-radius:7px; }
+  .brand-mini-text{ font-family:'Fraunces',serif; font-weight:600; font-size:16px; }
+  .topbar-actions{ display:flex; align-items:center; gap:8px; }
+  .icon-btn{
+    width:34px; height:34px; border-radius:9px; border:1px solid var(--border); background:var(--surface-2);
+    color:var(--ink-dim); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:600;
+  }
+  select.portfolio-switch{
+    font-family:inherit; font-size:13px; font-weight:600; padding:8px 10px; border-radius:9px;
+    border:1px solid var(--border); background:var(--surface-2); color:var(--ink); max-width:150px;
+  }
+
+  main{ flex:1; padding: 18px 16px 100px; max-width:640px; width:100%; margin:0 auto; }
+  .greet{ font-size:13px; color:var(--ink-dim); margin:2px 0 0; }
+  .greet b{ color:var(--ink); }
+
+  .section-title{ font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--ink-faint); margin: 26px 0 12px; }
+  .section-title:first-child{ margin-top:6px; }
+
+  /* summary tiles */
+  .tiles{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .tile{
+    background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px;
+    box-shadow:var(--shadow);
+  }
+  .tile.wide{ grid-column:1 / -1; }
+  .tile-label{ font-size:12px; color:var(--ink-dim); font-weight:600; letter-spacing:.2px; }
+  .tile-value{ font-size:22px; font-weight:600; margin-top:6px; line-height:1.1; }
+  .tile-sub{ font-size:12px; color:var(--ink-faint); margin-top:5px; }
+  .tile-value.accent{ color:var(--accent); }
+
+  .progress-row{ display:flex; align-items:center; gap:10px; margin-top:10px; }
+  .progress-track{ flex:1; height:8px; border-radius:99px; background:var(--surface-2); overflow:hidden; }
+  .progress-fill{ height:100%; background:var(--accent); border-radius:99px; }
+  .progress-pct{ font-size:12px; font-weight:700; color:var(--accent); min-width:34px; text-align:right; }
+
+  .currency-toggle{ display:inline-flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; }
+  .currency-toggle button{
+    padding:6px 12px; font-size:12px; font-weight:700; border:none; background:var(--surface-2); color:var(--ink-dim); cursor:pointer;
+  }
+  .currency-toggle button.active{ background:var(--accent); color:var(--accent-ink); }
+
+  /* chart */
+  .chart-card{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px 16px 8px; box-shadow:var(--shadow); }
+  .chart-legend{ display:flex; gap:16px; margin-bottom:10px; font-size:12px; color:var(--ink-dim); }
+  .legend-dot{ width:8px; height:8px; border-radius:2px; display:inline-block; margin-right:5px; }
+
+  /* upcoming payments */
+  .pay-row{
+    display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border);
+  }
+  .pay-row:last-child{ border-bottom:none; }
+  .pay-days{
+    width:46px; height:46px; border-radius:11px; background:var(--surface-2); flex:none;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1;
+  }
+  .pay-days b{ font-size:15px; font-family:'IBM Plex Mono',monospace; }
+  .pay-days span{ font-size:8.5px; color:var(--ink-faint); text-transform:uppercase; margin-top:2px; letter-spacing:.3px; }
+  .pay-days.overdue{ background:var(--bad-soft); }
+  .pay-days.overdue b{ color:var(--bad); }
+  .pay-days.soon{ background:var(--warn-soft); }
+  .pay-days.soon b{ color:var(--warn); }
+  .pay-info{ flex:1; min-width:0; }
+  .pay-prop{ font-size:13.5px; font-weight:600; }
+  .pay-milestone{ font-size:12px; color:var(--ink-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pay-amount{ font-size:13.5px; font-weight:600; text-align:right; font-family:'IBM Plex Mono',monospace; white-space:nowrap; }
+
+  .empty-note{ color:var(--ink-faint); font-size:13px; padding:20px 0; text-align:center; }
+
+  /* property cards */
+  .prop-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px;
+    margin-bottom:12px; box-shadow:var(--shadow); cursor:pointer;
+  }
+  .prop-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .prop-name{ font-size:16px; font-weight:600; font-family:'Fraunces',serif; }
+  .prop-dev{ font-size:12.5px; color:var(--ink-dim); margin-top:2px; }
+  .status-pill{
+    font-size:10.5px; font-weight:700; padding:4px 9px; border-radius:99px; white-space:nowrap; letter-spacing:.2px;
+    background:var(--accent-soft); color:var(--accent);
+  }
+  .badge-row{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .badge-resale{
+    font-size:10.5px; font-weight:700; padding:4px 9px; border-radius:99px; white-space:nowrap; letter-spacing:.2px;
+    background:var(--good-soft); color:var(--good);
+  }
+  .prop-meta{ display:flex; gap:14px; margin-top:12px; flex-wrap:wrap; }
+  .prop-meta-item{ font-size:12px; color:var(--ink-dim); }
+  .prop-meta-item b{ color:var(--ink); font-weight:600; }
+  .prop-progress{ margin-top:12px; }
+  .prop-progress-labels{ display:flex; justify-content:space-between; font-size:11.5px; color:var(--ink-faint); margin-bottom:5px; }
+
+  /* property detail */
+  .back-row{ display:flex; align-items:center; gap:8px; margin-bottom:14px; cursor:pointer; color:var(--ink-dim); font-size:13.5px; font-weight:600; }
+  .detail-hero{ background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:20px; box-shadow:var(--shadow); }
+  .detail-title{ font-size:21px; font-weight:600; }
+  .detail-loc{ font-size:13px; color:var(--ink-dim); margin-top:3px; }
+  .detail-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:18px; }
+  .detail-item{ }
+  .detail-item .k{ font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.3px; font-weight:600; }
+  .detail-item .v{ font-size:14.5px; font-weight:600; margin-top:3px; }
+  .owner-chip{ display:inline-flex; align-items:center; gap:6px; background:var(--surface-2); border-radius:99px; padding:5px 10px 5px 5px; font-size:12px; margin:3px 6px 0 0; }
+  .owner-chip .dot{ width:20px; height:20px; border-radius:50%; background:var(--accent); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; }
+
+  .detail-subhead{ font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.3px; font-weight:700; margin:18px 0 8px; }
+  .fact-list{ display:flex; flex-direction:column; gap:0; }
+  .fact-row{ display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-top:1px solid var(--border); font-size:13px; }
+  .fact-row:first-child{ border-top:none; }
+  .fact-row .k{ color:var(--ink-dim); }
+  .fact-row .v{ font-weight:600; text-align:right; }
+  .readiness-box{ border-radius:14px; padding:14px; margin-top:18px; border:1px solid var(--border); background:var(--surface-2); }
+  .readiness-box.eligible{ background:var(--good-soft); border-color:transparent; }
+  .readiness-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .readiness-title{ font-size:13.5px; font-weight:700; }
+  .readiness-box.eligible .readiness-title{ color:var(--good); }
+  .readiness-desc{ font-size:12.5px; color:var(--ink-dim); margin-top:5px; line-height:1.5; }
+  .readiness-box.eligible .readiness-desc{ color:var(--ink); }
+
+  .milestone-row{ display:flex; gap:12px; padding:13px 0; border-bottom:1px solid var(--border); align-items:flex-start; }
+  .milestone-row:last-child{ border-bottom:none; }
+  .m-marker{ width:10px; height:10px; border-radius:50%; margin-top:5px; flex:none; background:var(--ink-faint); }
+  .m-marker.paid{ background:var(--good); }
+  .m-marker.overdue{ background:var(--bad); }
+  .m-marker.soon{ background:var(--warn); }
+  .m-marker.undecided{ background:var(--ink-faint); border:2px solid var(--border); }
+  .m-body{ flex:1; min-width:0; }
+  .m-top{ display:flex; justify-content:space-between; gap:8px; }
+  .m-name{ font-size:13.5px; font-weight:600; }
+  .m-amt{ font-size:13.5px; font-weight:600; font-family:'IBM Plex Mono',monospace; white-space:nowrap; }
+  .m-sub{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
+  .m-status{ font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; margin-top:4px; display:inline-block; }
+  .m-status.paid{ color:var(--good); }
+  .m-status.overdue{ color:var(--bad); }
+  .m-status.soon{ color:var(--warn); }
+  .m-status.upcoming{ color:var(--ink-faint); }
+  .m-status.undecided{ color:var(--ink-faint); }
+
+  /* payments grouping */
+  .group-count{ font-weight:400; color:var(--ink-faint); text-transform:none; letter-spacing:0; }
+
+  /* bottom nav */
+  .bottom-nav{
+    position:fixed; left:0; right:0; bottom:0; z-index:30;
+    background:color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter:blur(10px);
+    border-top:1px solid var(--border);
+    padding: 8px 10px max(8px, env(safe-area-inset-bottom));
+    display:flex; justify-content:space-around;
+  }
+  .nav-btn{
+    background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px;
+    color:var(--ink-faint); font-size:10.5px; font-weight:600; padding:6px 14px; border-radius:10px; cursor:pointer;
+  }
+  .nav-btn.active{ color:var(--accent); }
+  .nav-ico{ width:20px; height:20px; }
+
+  .account-card{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px; box-shadow:var(--shadow); margin-bottom:12px; }
+  .acc-row{ display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:13.5px; }
+  .acc-row:last-child{ border-bottom:none; }
+  .acc-row .k{ color:var(--ink-dim); }
+  .acc-row .v{ font-weight:600; }
+
+  .loading-screen{ min-height:100%; display:flex; align-items:center; justify-content:center; color:var(--ink-faint); font-size:13px; }
+  .spinner{ width:22px; height:22px; border-radius:50%; border:2.5px solid var(--border); border-top-color:var(--accent); animation:spin .8s linear infinite; margin-right:10px; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  [hidden]{ display:none !important; }
+</style>
+
+<div id="app"><div class="loading-screen"><div class="spinner"></div>Loading portfolio…</div></div>
+
+<script>
+(function(){
+  "use strict";
+  var SUPABASE_URL = "https://nrdqdgkotnuwnbrujrdu.supabase.co";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yZHFkZ2tvdG51d25icnVqcmR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2MDgwNjQsImV4cCI6MjEwNjE4NDA2NH0.XEIGKzp7jqSkHpP2ULo4v-jlyS93fmu8XVE-jfpEYWw";
+  var sb = null;
+  try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) { console.error("Supabase init failed", e); }
+
+  var app = document.getElementById('app');
+  var TODAY = new Date(); TODAY.setHours(0,0,0,0);
+
+  function getSavedTheme(){
+    try { return localStorage.getItem('ledger_theme') || 'light'; } catch(e){ return 'light'; }
+  }
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+  }
+  applyTheme(getSavedTheme());
+
+  var state = {
+    session: null, profile: null,
+    portfolios: [], currentPortfolioId: null,
+    properties: [], milestones: [],
+    fxRate: 25.96,
+    tab: 'dashboard', currency: 'AED',
+    theme: getSavedTheme(),
+    detailPropertyId: null,
+    loginError: ''
+  };
+
+  function fmtMoney(aed, currency){
+    var v = currency === 'INR' ? aed * (state.fxRate || 25.96) : aed;
+    var symbol = currency === 'INR' ? '₹' : 'AED ';
+    var rounded = Math.round(v);
+    return symbol + rounded.toLocaleString(currency === 'INR' ? 'en-IN' : 'en-US');
+  }
+  function fmtDate(d){
+    if(!d) return '—';
+    var dt = new Date(d + 'T00:00:00');
+    return dt.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+  }
+  function daysUntil(d){
+    if(!d) return null;
+    var dt = new Date(d + 'T00:00:00');
+    return Math.round((dt - TODAY) / 86400000);
+  }
+  function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  // Five states: paid, overdue, soon (<=30d), upcoming (30-90d+), undecided (no due date, unpaid)
+  function milestoneState(m){
+    if(m.status === 'Paid') return 'paid';
+    if(!m.due_date) return 'undecided';
+    var d = daysUntil(m.due_date);
+    if(d < 0) return 'overdue';
+    if(d <= 30) return 'soon';
+    return 'upcoming';
+  }
+  var STATE_LABEL = { paid:'Paid', overdue:'Overdue', soon:'Due soon', upcoming:'Upcoming', undecided:'Undecided' };
+
+  function resaleEligibility(p){
+    var applicable = String(p.resale_applicable||'').toUpperCase() === 'YES';
+    if(!applicable) return { applicable:false, eligible:false };
+    var reqPct = Number(p.resale_noc_pct||0);
+    var paidPct = Number(p.total_unit_price_aed) > 0 ? Number(p.total_paid_aed||0) / Number(p.total_unit_price_aed) : 0;
+    return { applicable:true, eligible: paidPct >= reqPct, reqPct: reqPct, paidPct: paidPct };
+  }
+
+  /* ---------------- AUTH ---------------- */
+  async function init(){
+    if(!sb){ app.innerHTML = '<div class="loading-screen">Could not connect to the portfolio service.</div>'; return; }
+    var res = await sb.auth.getSession();
+    var session = res.data ? res.data.session : null;
+    if(session){ state.session = session; await loadEverything(); }
+    else { renderLogin(); }
+  }
+
+  async function loadEverything(){
+    app.innerHTML = '<div class="loading-screen"><div class="spinner"></div>Loading your portfolio…</div>';
+    var userId = state.session.user.id;
+
+    var profRes = await sb.from('profiles').select('*').eq('id', userId).single();
+    if(profRes.error || !profRes.data){ renderLogin('Could not load your profile. Please try again.'); return; }
+    state.profile = profRes.data;
+
+    var portRes = await sb.from('portfolios').select('*').order('name');
+    state.portfolios = portRes.data || [];
+    if(!state.currentPortfolioId && state.portfolios.length){ state.currentPortfolioId = state.portfolios[0].id; }
+
+    var fxRes = await sb.from('fx_rates').select('*').eq('id', 1).single();
+    if(fxRes.data){ state.fxRate = fxRes.data.aed_to_inr; }
+
+    await loadPortfolioData();
+    render();
+  }
+
+  async function loadPortfolioData(){
+    if(!state.currentPortfolioId){ state.properties = []; state.milestones = []; return; }
+    var propRes = await sb.from('properties').select('*').eq('portfolio_id', state.currentPortfolioId).order('purchase_date');
+    state.properties = propRes.data || [];
+    var ids = state.properties.map(function(p){ return p.id; });
+    if(ids.length){
+      var msRes = await sb.from('payment_milestones').select('*').in('property_id', ids).order('due_date');
+      state.milestones = msRes.data || [];
+    } else { state.milestones = []; }
+  }
+
+  async function doLogin(email, password, btn){
+    btn.disabled = true; btn.textContent = 'Signing in…';
+    var res = await sb.auth.signInWithPassword({ email: email, password: password });
+    if(res.error){
+      btn.disabled = false; btn.textContent = 'Log in';
+      var errBox = document.getElementById('loginErr');
+      if(errBox){ errBox.textContent = res.error.message === 'Invalid login credentials' ? 'Incorrect email or password.' : res.error.message; errBox.style.display = 'block'; }
+      return;
+    }
+    state.session = res.data.session;
+    await loadEverything();
+  }
+
+  async function doLogout(){
+    await sb.auth.signOut();
+    state = { session:null, profile:null, portfolios:[], currentPortfolioId:null, properties:[], milestones:[], fxRate:25.96, tab:'dashboard', currency:'AED', detailPropertyId:null, loginError:'' };
+    renderLogin();
+  }
+
+  /* ---------------- RENDER: LOGIN ---------------- */
+  function renderLogin(prefillError){
+    app.innerHTML =
+      '<div class="login-screen"><div class="login-card">' +
+        '<div class="login-brand"><div class="login-mark">L</div><div><div class="login-brand-text">Ledger</div><p class="login-sub">Off-plan portfolio tracking</p></div></div>' +
+        '<h1 class="login-title">Welcome back</h1>' +
+        '<p class="login-desc">Sign in to see the properties, payment schedules, and progress tied to your account. Every investor only ever sees their own portfolio.</p>' +
+        '<div class="login-error" id="loginErr">' + esc(prefillError||'') + '</div>' +
+        '<div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="username" placeholder="you@email.com"></div>' +
+        '<div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" placeholder="••••••••"></div>' +
+        '<button class="btn" id="loginBtn">Log in</button>' +
+        '<div class="demo-box">' +
+          '<div><b>Try it — demo logins</b></div>' +
+          '<div class="demo-row" data-email="shukla.family.demo@example.com" data-pass="ShuklaPortfolio#2026!"><span>Investor (Shukla Family)</span><span>tap to fill →</span></div>' +
+          '<div class="demo-row" data-email="ishlokchavan@gmail.com" data-pass="Portfolio#Admin2026!"><span>Agency admin (all clients)</span><span>tap to fill →</span></div>' +
+        '</div>' +
+      '</div></div>';
+
+    if(prefillError){ document.getElementById('loginErr').style.display = 'block'; }
+
+    document.getElementById('loginBtn').addEventListener('click', function(){
+      var email = document.getElementById('email').value.trim();
+      var password = document.getElementById('password').value;
+      if(!email || !password){
+        var errBox = document.getElementById('loginErr');
+        errBox.textContent = 'Enter your email and password.'; errBox.style.display='block';
+        return;
+      }
+      doLogin(email, password, this);
+    });
+    document.querySelectorAll('.demo-row').forEach(function(row){
+      row.addEventListener('click', function(){
+        document.getElementById('email').value = row.getAttribute('data-email');
+        document.getElementById('password').value = row.getAttribute('data-pass');
+      });
+    });
+    document.getElementById('password').addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ document.getElementById('loginBtn').click(); }
+    });
+  }
+
+  /* ---------------- RENDER: SHELL ---------------- */
+  function render(){
+    var portfolio = state.portfolios.find(function(p){ return p.id === state.currentPortfolioId; });
+    var switcherHtml = '';
+    if(state.profile.role === 'admin' && state.portfolios.length){
+      switcherHtml = '<select class="portfolio-switch" id="portfolioSwitch">' +
+        state.portfolios.map(function(p){ return '<option value="'+p.id+'"'+(p.id===state.currentPortfolioId?' selected':'')+'>'+esc(p.name)+'</option>'; }).join('') +
+        '</select>';
+    } else if(portfolio){
+      switcherHtml = '<div style="font-size:13px;font-weight:600;color:var(--ink-dim)">' + esc(portfolio.name) + '</div>';
+    }
+
+    var body = '';
+    if(state.tab === 'dashboard') body = renderDashboard(portfolio);
+    else if(state.tab === 'properties') body = renderProperties();
+    else if(state.tab === 'detail') body = renderDetail();
+    else if(state.tab === 'payments') body = renderPayments();
+    else if(state.tab === 'account') body = renderAccount();
+
+    app.innerHTML =
+      '<div class="topbar"><div class="topbar-row">' +
+        '<div class="brand-mini"><div class="login-mark">L</div><div class="brand-mini-text">Ledger</div></div>' +
+        '<div class="topbar-actions">' + switcherHtml + '</div>' +
+      '</div></div>' +
+      '<main id="main">' + body + '</main>' +
+      renderNav();
+
+    wireUp();
+  }
+
+  function renderNav(){
+    var tabs = [
+      { id:'dashboard', label:'Overview', ico:'M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6V11h-6v9Zm0-16v5h6V4h-6Z' },
+      { id:'properties', label:'Properties', ico:'M4 21V9l8-6 8 6v12h-6v-7h-4v7H4Z' },
+      { id:'payments', label:'Payments', ico:'M3 10h18M6 6h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z' },
+      { id:'account', label:'Account', ico:'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0' }
+    ];
+    return '<nav class="bottom-nav">' + tabs.map(function(t){
+      return '<button class="nav-btn' + (state.tab===t.id || (t.id==='properties' && state.tab==='detail') ? ' active' : '') + '" data-tab="'+t.id+'">' +
+        '<svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="'+t.ico+'"/></svg>' +
+        '<span>'+t.label+'</span></button>';
+    }).join('') + '</nav>';
+  }
+
+  function portfolioTotals(){
+    var totalValue=0, totalPaid=0, totalPending=0;
+    state.properties.forEach(function(p){
+      totalValue += Number(p.total_unit_price_aed||0);
+      totalPaid += Number(p.total_paid_aed||0);
+      totalPending += Number(p.total_pending_aed||0);
+    });
+    var pct = totalValue > 0 ? Math.round((totalPaid/totalValue)*100) : 0;
+    return { totalValue: totalValue, totalPaid: totalPaid, totalPending: totalPending, pct: pct };
+  }
+
+  function renderDashboard(portfolio){
+    var t = portfolioTotals();
+    var cur = state.currency;
+    var currencyToggle = '<div class="currency-toggle" id="curToggle">' +
+      '<button data-c="AED" class="'+(cur==='AED'?'active':'')+'">AED</button>' +
+      '<button data-c="INR" class="'+(cur==='INR'?'active':'')+'">INR</button></div>';
+
+    var upcoming = state.milestones.filter(function(m){ return m.status !== 'Paid'; })
+      .sort(function(a,b){ return new Date(a.due_date||'2099-01-01') - new Date(b.due_date||'2099-01-01'); })
+      .slice(0,5);
+
+    var upcomingHtml = upcoming.length ? upcoming.map(function(m){
+      var prop = state.properties.find(function(p){ return p.id === m.property_id; });
+      var d = daysUntil(m.due_date);
+      var cls = d===null ? '' : d<0 ? 'overdue' : d<=30 ? 'soon' : '';
+      var daysLabel = d===null ? '—' : d<0 ? Math.abs(d) : d;
+      var daysSub = d===null ? 'TBD' : d<0 ? 'DAYS LATE' : d===0 ? 'TODAY' : 'DAYS';
+      return '<div class="pay-row">' +
+        '<div class="pay-days '+cls+'"><b>'+daysLabel+'</b><span>'+daysSub+'</span></div>' +
+        '<div class="pay-info"><div class="pay-prop">'+esc(prop?prop.project_name:'')+'</div><div class="pay-milestone">'+esc(m.milestone_event)+'</div></div>' +
+        '<div class="pay-amount">'+fmtMoney(m.amount_aed, cur)+'</div>' +
+      '</div>';
+    }).join('') : '<div class="empty-note">No upcoming payments — everything on this portfolio is settled.</div>';
+
+    var chartHtml = state.properties.length ? buildChart() : '';
+
+    return (
+      '<p class="greet">Welcome back, <b>'+esc(state.profile.full_name)+'</b></p>' +
+      '<div class="section-title" style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;">Portfolio summary ' + currencyToggle + '</div>' +
+      '<div class="tiles">' +
+        '<div class="tile wide"><div class="tile-label">Total portfolio value</div><div class="tile-value num-display">'+fmtMoney(t.totalValue, cur)+'</div>' +
+          '<div class="progress-row"><div class="progress-track"><div class="progress-fill" style="width:'+t.pct+'%"></div></div><div class="progress-pct">'+t.pct+'%</div></div>' +
+          '<div class="tile-sub">'+fmtMoney(t.totalPaid, cur)+' paid of '+fmtMoney(t.totalValue, cur)+'</div></div>' +
+        '<div class="tile"><div class="tile-label">Paid to date</div><div class="tile-value accent">'+fmtMoney(t.totalPaid, cur)+'</div></div>' +
+        '<div class="tile"><div class="tile-label">Remaining</div><div class="tile-value">'+fmtMoney(t.totalPending, cur)+'</div></div>' +
+        '<div class="tile"><div class="tile-label">Properties</div><div class="tile-value">'+state.properties.length+'</div></div>' +
+        '<div class="tile"><div class="tile-label">FX rate</div><div class="tile-value" style="font-size:16px;">1 AED = ₹'+state.fxRate+'</div></div>' +
+      '</div>' +
+      (chartHtml ? '<div class="section-title">Paid vs. remaining, by property</div>' + chartHtml : '') +
+      '<div class="section-title">Upcoming payments</div>' +
+      '<div class="chart-card">' + upcomingHtml + '</div>'
+    );
+  }
+
+  function buildChart(){
+    var cur = state.currency;
+    var w = 300, rowH = 34, gap = 10, labelW = 0, barH = 16;
+    var maxVal = Math.max.apply(null, state.properties.map(function(p){ return Number(p.total_unit_price_aed||0); }).concat([1]));
+    var rows = state.properties.map(function(p, i){
+      var paid = Number(p.total_paid_aed||0), pend = Number(p.total_pending_aed||0);
+      var paidW = (paid/maxVal) * 100, pendW = (pend/maxVal) * 100;
+      return '<div style="margin-bottom:'+gap+'px;">' +
+        '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="font-weight:600;">'+esc(p.project_name)+'</span><span class="mono" style="color:var(--ink-dim)">'+fmtMoney(paid+pend, cur)+'</span></div>' +
+        '<div style="display:flex;height:'+barH+'px;border-radius:6px;overflow:hidden;background:var(--surface-2);">' +
+          '<div style="width:'+paidW+'%;background:var(--accent);"></div>' +
+          '<div style="width:'+pendW+'%;background:var(--border);"></div>' +
+        '</div></div>';
+    }).join('');
+    return '<div class="chart-card">' +
+      '<div class="chart-legend"><span><span class="legend-dot" style="background:var(--accent)"></span>Paid</span><span><span class="legend-dot" style="background:var(--border)"></span>Remaining</span></div>' +
+      rows + '</div>';
+  }
+
+  function renderProperties(){
+    if(!state.properties.length) return '<div class="empty-note">No properties in this portfolio yet.</div>';
+    return '<div class="section-title">Properties (' + state.properties.length + ')</div>' +
+      state.properties.map(function(p){
+        var pct = p.total_unit_price_aed > 0 ? Math.round((p.total_paid_aed/p.total_unit_price_aed)*100) : 0;
+        var resale = resaleEligibility(p);
+        return '<div class="prop-card" data-id="'+p.id+'">' +
+          '<div class="prop-top"><div><div class="prop-name">'+esc(p.project_name)+'</div><div class="prop-dev">'+esc(p.developer)+' · '+esc(p.location||'')+'</div></div>' +
+          '<div class="badge-row"><div class="status-pill">'+esc(p.status)+'</div>' + (resale.eligible ? '<div class="badge-resale">Resale ready</div>' : '') + '</div></div>' +
+          '<div class="prop-meta">' +
+            '<div class="prop-meta-item"><b>'+esc(p.unit_type||'')+'</b> · ' + (p.bedrooms ? Math.trunc(p.bedrooms)+' BR' : '') + '</div>' +
+            '<div class="prop-meta-item">Handover <b>'+fmtDate(p.handover_date)+'</b></div>' +
+          '</div>' +
+          '<div class="prop-progress"><div class="prop-progress-labels"><span>'+fmtMoney(p.total_paid_aed, state.currency)+' paid</span><span>'+pct+'%</span></div>' +
+          '<div class="progress-track"><div class="progress-fill" style="width:'+pct+'%"></div></div></div>' +
+        '</div>';
+      }).join('');
+  }
+
+  function fmtPct(x){ return x==null ? '—' : Math.round(x*1000)/10 + '%'; }
+  function fmtPsf(x){ return (x==null || x==='') ? null : 'AED ' + Math.round(x).toLocaleString('en-US') + ' /sqft'; }
+
+  function renderDetail(){
+    var p = state.properties.find(function(x){ return x.id === state.detailPropertyId; });
+    if(!p) return '<div class="empty-note">Property not found.</div>';
+    var ms = state.milestones.filter(function(m){ return m.property_id === p.id; })
+      .sort(function(a,b){ return (a.milestone_no||0) - (b.milestone_no||0); });
+    var pct = p.total_unit_price_aed > 0 ? Math.round((p.total_paid_aed/p.total_unit_price_aed)*100) : 0;
+    var cur = state.currency;
+
+    var owners = '';
+    if(p.owner1_name) owners += '<span class="owner-chip"><span class="dot">'+esc(p.owner1_name[0])+'</span>'+esc(p.owner1_name)+' · '+Math.round((p.owner1_pct||0)*100)+'%</span>';
+    if(p.owner2_name) owners += '<span class="owner-chip"><span class="dot">'+esc(p.owner2_name[0])+'</span>'+esc(p.owner2_name)+' · '+Math.round((p.owner2_pct||0)*100)+'%</span>';
+
+    var milestonesHtml = ms.map(function(m){
+      var st = milestoneState(m);
+      var d = daysUntil(m.due_date);
+      var subParts = [];
+      if(m.due_date) subParts.push('Due ' + fmtDate(m.due_date));
+      else subParts.push('Date not confirmed');
+      if(m.installment_code) subParts.push(m.installment_code);
+      var statusLabel = st==='overdue' ? (Math.abs(d)+'d overdue') : STATE_LABEL[st];
+      return '<div class="milestone-row"><div class="m-marker '+st+'"></div>' +
+        '<div class="m-body"><div class="m-top"><div class="m-name">'+esc(m.milestone_event)+'</div><div class="m-amt">'+fmtMoney(m.amount_aed, cur)+'</div></div>' +
+        '<div class="m-sub">'+esc(subParts.join(' · '))+'</div>' +
+        '<div class="m-status '+st+'">'+statusLabel+'</div></div></div>';
+    }).join('');
+
+    // ---- Pricing detail (PPSF etc.) ----
+    var pricingFacts = [];
+    if(p.unit_price_aed && Number(p.unit_price_aed) !== Number(p.total_unit_price_aed)) pricingFacts.push(['Base price', fmtMoney(p.unit_price_aed, cur)]);
+    pricingFacts.push(['Total unit price', fmtMoney(p.total_unit_price_aed, cur)]);
+    if(fmtPsf(p.ppsf_bua)) pricingFacts.push(['Price per sqft (BUA)', fmtPsf(p.ppsf_bua)]);
+    if(fmtPsf(p.ppsf_plot)) pricingFacts.push(['Price per sqft (Plot)', fmtPsf(p.ppsf_plot)]);
+
+    // ---- Equity / payment structure ----
+    var equityPhases = [
+      ['During construction', p.equity_construction_pct, p.equity_construction_aed],
+      ['On handover', p.equity_handover_pct, p.equity_handover_aed],
+      ['Post-handover', p.equity_posthandover_pct, p.equity_posthandover_aed]
+    ].filter(function(row){ return row[1] != null && Number(row[1]) > 0; });
+    var equityHtml = equityPhases.length ? '<div class="fact-list">' + equityPhases.map(function(row){
+      return '<div class="fact-row"><div class="k">'+row[0]+'</div><div class="v">'+fmtPct(row[1])+' · '+fmtMoney(row[2], cur)+'</div></div>';
+    }).join('') + '</div>' : '';
+
+    var acceleratedHtml = '';
+    if(p.accelerated_payment_aed != null && Number(p.accelerated_payment_aed) > 0){
+      acceleratedHtml = '<div class="fact-list"><div class="fact-row"><div class="k">Accelerated payment</div><div class="v">'+fmtPct(p.accelerated_payment_pct)+' · '+fmtMoney(p.accelerated_payment_aed, cur)+'</div></div></div>';
+    }
+
+    // ---- Resale readiness ----
+    var resale = resaleEligibility(p);
+    var readinessHtml = '';
+    if(!resale.applicable){
+      readinessHtml = '<div class="readiness-box"><div class="readiness-head"><div class="readiness-title">Not resale-applicable</div></div>' +
+        '<div class="readiness-desc">This unit\'s contract does not permit resale at this stage.</div></div>';
+    } else if(resale.eligible){
+      readinessHtml = '<div class="readiness-box eligible"><div class="readiness-head"><div class="readiness-title">Resale ready</div></div>' +
+        '<div class="readiness-desc">'+fmtPct(resale.paidPct)+' paid, above the '+fmtPct(resale.reqPct)+' required for a resale NOC.</div></div>';
+    } else {
+      readinessHtml = '<div class="readiness-box"><div class="readiness-head"><div class="readiness-title">Not yet eligible to sell</div></div>' +
+        '<div class="readiness-desc">'+fmtPct(resale.paidPct)+' paid — needs '+fmtPct(resale.reqPct)+' paid to qualify for a resale NOC.</div></div>';
+    }
+
+    return (
+      '<div class="back-row" id="backToProps"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>All properties</div>' +
+      '<div class="detail-hero">' +
+        '<div class="detail-title">'+esc(p.project_name)+'</div>' +
+        '<div class="detail-loc">'+esc(p.developer)+' · '+esc(p.location||'')+' · Unit '+esc(p.unit_no||'')+'</div>' +
+        '<div class="progress-row" style="margin-top:16px;"><div class="progress-track"><div class="progress-fill" style="width:'+pct+'%"></div></div><div class="progress-pct">'+pct+'%</div></div>' +
+        '<div class="tile-sub">'+fmtMoney(p.total_paid_aed, cur)+' paid of '+fmtMoney(p.total_unit_price_aed, cur)+' · '+fmtMoney(p.total_pending_aed, cur)+' remaining</div>' +
+        '<div class="detail-grid">' +
+          '<div class="detail-item"><div class="k">Type</div><div class="v">'+esc(p.unit_type||'—')+(p.bedrooms?' · '+Math.trunc(p.bedrooms)+' BR':'')+'</div></div>' +
+          '<div class="detail-item"><div class="k">Size (BUA)</div><div class="v">'+(p.size_sqft?Math.round(p.size_sqft).toLocaleString('en-US')+' sqft':'—')+'</div></div>' +
+          (p.plot_sqft ? '<div class="detail-item"><div class="k">Plot</div><div class="v">'+Math.round(p.plot_sqft).toLocaleString('en-US')+' sqft</div></div>' : '') +
+          '<div class="detail-item"><div class="k">Payment plan</div><div class="v">'+esc(p.payment_plan||'—')+'</div></div>' +
+          '<div class="detail-item"><div class="k">Purchase date</div><div class="v">'+fmtDate(p.purchase_date)+'</div></div>' +
+          '<div class="detail-item"><div class="k">Handover</div><div class="v">'+fmtDate(p.handover_date)+'</div></div>' +
+          '<div class="detail-item"><div class="k">Status</div><div class="v">'+esc(p.status)+'</div></div>' +
+          '<div class="detail-item"><div class="k">Unit no.</div><div class="v">'+esc(p.unit_no||'—')+'</div></div>' +
+        '</div>' +
+        (owners ? '<div class="detail-item" style="margin-top:16px;"><div class="k">Ownership</div><div style="margin-top:6px;">'+owners+'</div></div>' : '') +
+        '<div class="detail-subhead">Pricing</div>' +
+        '<div class="fact-list">' + pricingFacts.map(function(row){ return '<div class="fact-row"><div class="k">'+row[0]+'</div><div class="v">'+row[1]+'</div></div>'; }).join('') + '</div>' +
+        (equityHtml ? '<div class="detail-subhead">Payment structure</div>' + equityHtml : '') +
+        (acceleratedHtml ? '<div class="detail-subhead">Accelerated payment</div>' + acceleratedHtml : '') +
+        '<div class="detail-subhead">Resale</div>' + readinessHtml +
+        (p.offer_notes ? '<div class="detail-item" style="margin-top:16px;"><div class="k">Offer / discount</div><div class="v">'+esc(p.offer_notes)+'</div></div>' : '') +
+        (p.remarks ? '<div class="detail-item" style="margin-top:14px;"><div class="k">Remarks</div><div class="v">'+esc(p.remarks)+'</div></div>' : '') +
+      '</div>' +
+      '<div class="section-title">Payment schedule ('+ms.length+' milestones)</div>' +
+      '<div class="chart-card">' + (milestonesHtml || '<div class="empty-note">No milestones on file.</div>') + '</div>'
+    );
+  }
+
+  function renderPayments(){
+    var all = state.milestones.slice().sort(function(a,b){ return new Date(a.due_date||'2099-01-01') - new Date(b.due_date||'2099-01-01'); });
+    var cur = state.currency;
+
+    var buckets = { overdue:[], soon:[], upcoming:[], undecided:[], paid:[] };
+    all.forEach(function(m){ buckets[milestoneState(m)].push(m); });
+
+    function rowsFor(list, st){
+      return list.map(function(m){
+        var prop = state.properties.find(function(p){ return p.id === m.property_id; });
+        var d = daysUntil(m.due_date);
+        var cls = st==='overdue' ? 'overdue' : st==='soon' ? 'soon' : '';
+        var daysLabel = st==='paid' ? '✓' : st==='undecided' ? '—' : d<0 ? Math.abs(d) : d;
+        var daysSub = st==='paid' ? 'PAID' : st==='undecided' ? 'TBD' : d<0 ? 'LATE' : 'DAYS';
+        return '<div class="pay-row">' +
+          '<div class="pay-days '+(st==='paid'?'':cls)+'" style="'+(st==='paid'?'background:var(--good-soft);':'')+'"><b style="'+(st==='paid'?'color:var(--good);':'')+'">'+daysLabel+'</b><span>'+daysSub+'</span></div>' +
+          '<div class="pay-info"><div class="pay-prop">'+esc(prop?prop.project_name:'')+'</div><div class="pay-milestone">'+esc(m.milestone_event)+'</div></div>' +
+          '<div class="pay-amount">'+fmtMoney(m.amount_aed, cur)+'</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function section(key, label, list, emptyMsg, reverse){
+      var items = reverse ? list.slice().reverse() : list;
+      return '<div class="section-title">'+label+' <span class="group-count">('+list.length+')</span></div>' +
+        '<div class="chart-card">' + (rowsFor(items, key) || '<div class="empty-note">'+emptyMsg+'</div>') + '</div>';
+    }
+
+    return (
+      section('overdue', 'Overdue', buckets.overdue, 'Nothing overdue.') +
+      section('soon', 'Due soon', buckets.soon, 'Nothing due in the next 30 days.') +
+      section('upcoming', 'Upcoming', buckets.upcoming, 'Nothing further out on the schedule.') +
+      section('undecided', 'Undecided', buckets.undecided, 'Every milestone has a confirmed date.') +
+      section('paid', 'Paid history', buckets.paid, 'No payments recorded yet.', true)
+    );
+  }
+
+  function renderAccount(){
+    var p = state.profile;
+    var theme = state.theme;
+    var themeToggle = '<div class="currency-toggle" id="themeToggle">' +
+      '<button data-t="light" class="'+(theme==='light'?'active':'')+'">Light</button>' +
+      '<button data-t="dark" class="'+(theme==='dark'?'active':'')+'">Dark</button></div>';
+    return (
+      '<div class="section-title">Appearance</div>' +
+      '<div class="account-card"><div class="acc-row" style="border-bottom:none;"><div class="k">Theme</div><div class="v">' + themeToggle + '</div></div></div>' +
+      '<div class="section-title">Signed in as</div>' +
+      '<div class="account-card">' +
+        '<div class="acc-row"><div class="k">Name</div><div class="v">'+esc(p.full_name)+'</div></div>' +
+        '<div class="acc-row"><div class="k">Email</div><div class="v">'+esc(p.email)+'</div></div>' +
+        '<div class="acc-row"><div class="k">Role</div><div class="v">'+(p.role==='admin'?'Agency admin':'Investor')+'</div></div>' +
+      '</div>' +
+      '<div class="section-title">Security</div>' +
+      '<div class="account-card"><div style="font-size:13px;color:var(--ink-dim);line-height:1.6;">This account only has access to portfolios it has been explicitly added to. Row-level security on the database enforces this — even a direct request for another client\'s data is rejected by the server, not just hidden in the app.</div></div>' +
+      '<button class="btn btn-ghost" id="logoutBtn" style="margin-top:6px;">Log out</button>'
+    );
+  }
+
+  /* ---------------- WIRE EVENTS ---------------- */
+  function wireUp(){
+    document.querySelectorAll('.nav-btn').forEach(function(b){
+      b.addEventListener('click', function(){ state.tab = b.getAttribute('data-tab'); render(); window.scrollTo(0,0); });
+    });
+    document.querySelectorAll('.prop-card').forEach(function(c){
+      c.addEventListener('click', function(){ state.detailPropertyId = c.getAttribute('data-id'); state.tab='detail'; render(); window.scrollTo(0,0); });
+    });
+    var back = document.getElementById('backToProps');
+    if(back) back.addEventListener('click', function(){ state.tab='properties'; render(); });
+    var logoutBtn = document.getElementById('logoutBtn');
+    if(logoutBtn) logoutBtn.addEventListener('click', doLogout);
+    var switcher = document.getElementById('portfolioSwitch');
+    if(switcher) switcher.addEventListener('change', async function(){
+      state.currentPortfolioId = switcher.value; state.tab='dashboard';
+      app.innerHTML = '<div class="loading-screen"><div class="spinner"></div>Switching client…</div>';
+      await loadPortfolioData(); render();
+    });
+    var curToggle = document.getElementById('curToggle');
+    if(curToggle) curToggle.addEventListener('click', function(e){
+      var btn = e.target.closest('button'); if(!btn) return;
+      state.currency = btn.getAttribute('data-c'); render();
+    });
+    var themeToggle = document.getElementById('themeToggle');
+    if(themeToggle) themeToggle.addEventListener('click', function(e){
+      var btn = e.target.closest('button'); if(!btn) return;
+      var t = btn.getAttribute('data-t');
+      state.theme = t; applyTheme(t);
+      try { localStorage.setItem('ledger_theme', t); } catch(err){}
+      render();
+    });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
