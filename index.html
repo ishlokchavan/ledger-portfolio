@@ -311,7 +311,7 @@
   .grid{ display:grid; gap:14px; }
   .grid > *, .d-grid > *, .g-account > *, .prop-grid > *{ min-width:0; }
   .g-hero{ grid-template-columns:1fr; }
-  .g-kpi{ grid-template-columns:1fr 1fr; margin-top:14px; }
+  .g-kpi{ grid-template-columns:repeat(2,minmax(0,1fr)); margin-top:14px; }
   .g-two{ grid-template-columns:1fr; margin-top:14px; }
   .hero{
     position:relative; overflow:hidden; border-radius:var(--r-xl); padding:24px; color:var(--hero-ink);
@@ -321,10 +321,15 @@
   .hero-label{ font-size:12.5px; font-weight:600; color:var(--hero-dim); letter-spacing:.3px; }
   .hero-value{ font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:clamp(32px,7vw,46px); line-height:1.05; margin-top:8px; letter-spacing:-.02em; }
   .hero-sub{ font-size:13px; color:var(--hero-dim); margin-top:8px; }
-  .hero-split{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:22px; }
+  .hero-split{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:22px; }
   .hero-stat{ padding:12px 13px; border-radius:var(--r-md); background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.08); min-width:0; }
   .hero-stat .k{ font-size:11px; color:var(--hero-dim); font-weight:600; }
-  .hero-stat .v{ font-size:15px; font-weight:600; margin-top:3px; font-family:'Inter',system-ui,sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hero-value.fit1{ font-size:clamp(26px,5.6vw,38px); } .hero-value.fit2{ font-size:clamp(22px,4.6vw,32px); } .hero-value.fit3{ font-size:clamp(18px,3.8vw,26px); }
+  .dsum-paid.fit1{ font-size:clamp(24px,5vw,32px); } .dsum-paid.fit2{ font-size:clamp(20px,4.2vw,27px); } .dsum-paid.fit3{ font-size:clamp(17px,3.6vw,23px); }
+  .nextup .amt.fit1{ font-size:24px; } .nextup .amt.fit2{ font-size:20px; } .nextup .amt.fit3{ font-size:17px; }
+  .next-amt.fit1{ font-size:17px; } .next-amt.fit2{ font-size:15px; } .next-amt.fit3{ font-size:13px; }
+  .hero-value,.dsum-paid,.nextup .amt,.next-amt,.kpi-value,.stat .amt,.dstat .v,.hero-stat .v{ max-width:100%; white-space:nowrap; overflow:hidden; }
+  .hero-stat .v{ font-size:15px; font-weight:600; margin-top:3px; font-family:'Inter',system-ui,sans-serif; white-space:nowrap; overflow:hidden; }
   .ring{ position:relative; flex:none; }
   .ring svg{ display:block; transform:rotate(-90deg); }
   .ring .track{ stroke:rgba(255,255,255,.14); }
@@ -567,7 +572,21 @@
   .jline.today{ border-left-style:solid; border-color:var(--ink); }
   .jthr{ position:absolute; left:0; right:0; border-top:1.5px dashed var(--good); }
   .jthr span{ position:absolute; right:0; top:-19px; font-size:10.5px; font-weight:700; color:var(--good); background:var(--surface); padding:0 4px; }
-  .jdot{ position:absolute; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; border-radius:50%; background:var(--surface); border:2px solid var(--ink-faint); }
+  .jchart{ touch-action:pan-y; cursor:crosshair; }
+  .jdot{ position:absolute; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; padding:0; border-radius:50%; background:var(--surface); border:2px solid var(--ink-faint); cursor:pointer; z-index:2; transition:transform .12s; }
+  .jdot:hover,.jdot.hot,.jdot:focus-visible{ transform:scale(1.5); }
+  .jcross{ position:absolute; top:0; bottom:0; width:0; border-left:1px solid var(--accent); pointer-events:none; z-index:1; }
+  .jtip{ position:absolute; z-index:5; min-width:170px; max-width:230px; padding:10px 12px; border-radius:var(--r-md); background:var(--ink); color:var(--bg); box-shadow:var(--shadow-lg); pointer-events:none; display:flex; flex-direction:column; gap:3px; font-size:12px; }
+  .jtip[hidden]{ display:none; }
+  .jtip b{ font-size:12.5px; line-height:1.3; } .jtip span{ opacity:.85; } .jtip .row i{ font-style:normal; opacity:.65; margin-right:4px; }
+  .seg-bar i[data-act]{ cursor:pointer; } .seg-bar i[data-act]:hover{ filter:brightness(.9); }
+  .cf-list{ display:flex; flex-direction:column; margin-top:14px; border-top:1px solid var(--border); }
+  .cf-item{ display:flex; align-items:center; gap:12px; padding:11px 4px; background:none; border:none; border-bottom:1px solid var(--border); text-align:left; cursor:pointer; width:100%; }
+  .cf-item:last-child{ border-bottom:none; } .cf-item:hover{ background:var(--surface-2); }
+  .cf-item .d{ width:52px; font-size:12px; font-weight:700; color:var(--ink-dim); flex:none; }
+  .cf-item .t{ flex:1; min-width:0; display:flex; flex-direction:column; } .cf-item .t b{ font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .cf-item .t span{ font-size:12px; color:var(--ink-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cf-item .a{ font-weight:700; font-size:13px; white-space:nowrap; }
+  .cf-empty{ margin-top:14px; padding-top:14px; border-top:1px solid var(--border); font-size:13px; color:var(--ink-dim); }
   .jdot.paid{ background:var(--accent); border-color:var(--accent); }
   .jdot.overdue{ background:var(--bad); border-color:var(--bad); }
   .jaxis{ display:flex; justify-content:space-between; margin:10px 0 0 34px; font-size:11px; color:var(--ink-faint); font-weight:600; }
@@ -658,7 +677,7 @@
   /* =====================================================================
      PAYMENTS
      ===================================================================== */
-  .statgrid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:16px; }
+  .statgrid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-bottom:16px; }
   .stat{
     text-align:left; padding:14px 15px; border-radius:var(--r-lg); border:1px solid var(--border); background:var(--surface); cursor:pointer; font:inherit; color:inherit;
     position:relative; transition:transform .15s var(--ease), border-color .15s, box-shadow .15s; box-shadow:var(--shadow-sm);
@@ -676,6 +695,10 @@
   .month-head:first-child{ border-top:none; border-radius:var(--r-lg) var(--r-lg) 0 0; }
   .month-head .sum{ font-family:'Inter',system-ui,sans-serif; font-weight:600; }
   .list-card{ overflow:clip; }
+  .range-inputs{ display:flex; gap:8px; flex-wrap:wrap; }
+  .range-inputs label{ display:flex; flex-direction:column; gap:4px; font-size:11px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.5px; }
+  .range-inputs .input{ min-height:44px; padding:8px 12px; font-size:13.5px; width:auto; }
+  .results-meta .rl{ color:var(--ink-faint); }
   .results-meta{ font-size:12.5px; color:var(--ink-dim); margin:0 4px 10px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
 
   /* =====================================================================
@@ -741,14 +764,14 @@
      RESPONSIVE
      ===================================================================== */
   @media (min-width:560px){
-    .statgrid{ grid-template-columns:repeat(3,1fr); }
+    .statgrid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
     .stat:last-child:nth-child(odd){ grid-column:auto; }
-    .prop-grid{ grid-template-columns:repeat(2,1fr); }
-    .g-kpi{ grid-template-columns:repeat(4,1fr); }
-    .dstats{ grid-template-columns:repeat(4,1fr); }
+    .prop-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .g-kpi{ grid-template-columns:repeat(4,minmax(0,1fr)); }
+    .dstats{ grid-template-columns:repeat(4,minmax(0,1fr)); }
     .dstat, .dstat:nth-child(even), .dstat:nth-child(n+3){ margin-top:0; border-top:none; padding:16px 0 0 18px; border-left:1px solid var(--border); }
     .dstat:first-child{ padding-left:0; border-left:none; }
-    .m-more{ grid-template-columns:repeat(4,1fr); }
+    .m-more{ grid-template-columns:repeat(4,minmax(0,1fr)); }
   }
   @media (min-width:900px){
     .login{ grid-template-columns:1.05fr 1fr; }
@@ -771,8 +794,8 @@
     .g-hero{ grid-template-columns:minmax(0,1.9fr) minmax(0,1fr); }
     .g-two{ grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); }
     .g-two.even{ grid-template-columns:1fr 1fr; }
-    .prop-grid{ grid-template-columns:repeat(2,1fr); }
-    .statgrid{ grid-template-columns:repeat(5,1fr); }
+    .prop-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .statgrid{ grid-template-columns:repeat(5,minmax(0,1fr)); }
     .d-cols{ grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); }
     .d-cols.even{ grid-template-columns:1fr 1fr; }
     .dhead{ flex-direction:row; justify-content:space-between; align-items:flex-start; }
@@ -782,9 +805,12 @@
     .hero{ padding:30px; }
   }
   @media (min-width:1200px){
-    .prop-grid{ grid-template-columns:repeat(3,1fr); }
+    .prop-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
   }
   .hide-mobile-inline{ display:none; }
+  @media (max-width:899px){ .refresh-btn{ display:none; } }
+  @media (max-width:420px){ .topbar-mobile-brand .brand-name{ display:none; } .topbar{ padding-left:12px; padding-right:12px; gap:8px; } .tools{ gap:6px; } .tools .icon-btn{ width:38px; height:38px; } }
+  .pref .select{ max-width:190px; } .pref{ flex-wrap:wrap; }
   @media (min-width:900px){ .hide-mobile-inline{ display:inline-flex; } .show-mobile-only{ display:none; } }
   @media (max-width:899px){
     .tools .hide-mobile{ display:none; }
@@ -838,16 +864,113 @@
   }
   if(mqDark && mqDark.addEventListener) mqDark.addEventListener('change', function(){ if(state.theme === 'system') applyTheme('system'); });
 
+  /* ---------------- currencies ---------------- */
+  // AED is always the base currency (all data is stored in AED). The user picks one secondary currency in Account.
+  var CURRENCIES = [
+    { c:'AED', n:'UAE Dirham' }, { c:'USD', n:'US Dollar' }, { c:'GBP', n:'British Pound' }, { c:'EUR', n:'Euro' },
+    { c:'INR', n:'Indian Rupee', loc:'en-IN', lakh:true }, { c:'PKR', n:'Pakistani Rupee', lakh:true }, { c:'BDT', n:'Bangladeshi Taka', lakh:true },
+    { c:'RUB', n:'Russian Ruble' }, { c:'CNY', n:'Chinese Yuan' }, { c:'SAR', n:'Saudi Riyal' }, { c:'QAR', n:'Qatari Riyal' },
+    { c:'KWD', n:'Kuwaiti Dinar' }, { c:'BHD', n:'Bahraini Dinar' }, { c:'OMR', n:'Omani Rial' }, { c:'AUD', n:'Australian Dollar' },
+    { c:'CAD', n:'Canadian Dollar' }, { c:'CHF', n:'Swiss Franc' }, { c:'JPY', n:'Japanese Yen' }, { c:'SGD', n:'Singapore Dollar' },
+    { c:'HKD', n:'Hong Kong Dollar' }, { c:'ZAR', n:'South African Rand' }, { c:'THB', n:'Thai Baht' }, { c:'MYR', n:'Malaysian Ringgit' }
+  ];
+  // Used only when live rates cannot be fetched; the UI labels them "approximate".
+  var FALLBACK_RATES = { AED:1, USD:0.2723, GBP:0.20, EUR:0.235, INR:25.96, PKR:76.8, BDT:33, RUB:22.5, CNY:1.97, SAR:1.0211, QAR:0.9912,
+    KWD:0.0835, BHD:0.1024, OMR:0.1047, AUD:0.41, CAD:0.37, CHF:0.22, JPY:41, SGD:0.35, HKD:2.124, ZAR:4.8, THB:9.5, MYR:1.17 };
+  var CUR_INFO = {}; CURRENCIES.forEach(function(x){ CUR_INFO[x.c] = x; });
+  var SYMS = { RUB:'₽', CNY:'CN¥', JPY:'JP¥', PKR:'Rs ', BDT:'৳', THB:'฿', INR:'₹', AED:'AED ' };
+  var symCache = {}, nfCache = {};
+  function curSymbol(code){
+    if(SYMS[code]) return SYMS[code];
+    if(symCache[code] == null){
+      var v = code;
+      try { var part = new Intl.NumberFormat('en-US', { style:'currency', currency:code, currencyDisplay:'symbol' }).formatToParts(1).filter(function(x){ return x.type === 'currency'; })[0]; if(part) v = part.value; } catch(e){}
+      symCache[code] = /^[A-Za-z]/.test(v) ? v + ' ' : v;
+    }
+    return symCache[code];
+  }
+  function numFmt(code, digits){
+    var k = code + digits;
+    if(!nfCache[k]){ try { nfCache[k] = new Intl.NumberFormat((CUR_INFO[code] && CUR_INFO[code].loc) || 'en-US', { minimumFractionDigits:digits, maximumFractionDigits:digits }); } catch(e){ nfCache[k] = new Intl.NumberFormat('en-US', { minimumFractionDigits:digits, maximumFractionDigits:digits }); } }
+    return nfCache[k];
+  }
+  function rateFor(code){
+    if(code === 'AED') return 1;
+    if(code === 'INR' && state.fxRate) return Number(state.fxRate);
+    return (state.rates && state.rates[code]) || FALLBACK_RATES[code] || 1;
+  }
+  function toCur(aed, currency){ return aed * rateFor(currency || state.currency); }
+  function sigTrim(n){ // ~3 significant digits, trailing zeros trimmed, thousands grouped
+    if(n >= 1000) return Math.round(n).toLocaleString('en-US');
+    var d = n < 10 ? 2 : n < 100 ? 1 : 0;
+    return String(parseFloat(n.toFixed(d)));
+  }
+  function fmtCompact(aed, currency){
+    currency = currency || state.currency;
+    var sym = curSymbol(currency);
+    if(state.privacy) return sym + '•••';
+    var v = toCur(Number(aed||0), currency), a = Math.abs(v), out, info = CUR_INFO[currency] || {};
+    if(!isFinite(a)) return sym + '—';
+    if(info.lakh){
+      out = a >= 1e12 ? sigTrim(a/1e12) + ' L Cr' : a >= 1e7 ? sigTrim(a/1e7) + ' Cr' : a >= 1e5 ? sigTrim(a/1e5) + ' L' : a >= 1e3 ? sigTrim(a/1e3) + 'K' : sigTrim(a);
+    } else {
+      out = a >= 1e12 ? sigTrim(a/1e12) + 'T' : a >= 1e9 ? sigTrim(a/1e9) + 'B' : a >= 1e6 ? sigTrim(a/1e6) + 'M' : a >= 1e3 ? sigTrim(a/1e3) + 'K' : sigTrim(a);
+    }
+    return (v < 0 ? '-' : '') + sym + out;
+  }
+  // Full figure when it fits comfortably; otherwise the compact form, so huge portfolios never break the layout.
+  var MAX_FULL = 16;
+  function fmtMoney(aed, currency, forceFull){
+    currency = currency || state.currency;
+    var sym = curSymbol(currency);
+    if(state.privacy) return sym + '••••••';
+    var v = toCur(Number(aed||0), currency);
+    if(!isFinite(v)) return sym + '—';
+    var a = Math.abs(v), digits = (a >= 100 || Math.abs(a - Math.round(a)) < 0.005) ? 0 : 2;
+    var str = (v < 0 ? '-' : '') + sym + numFmt(currency, digits).format(a);
+    return (!forceFull && str.length > MAX_FULL) ? fmtCompact(aed, currency) : str;
+  }
+  // CSS size class so very long figures shrink instead of overflowing
+  function fitCls(str){ var n = String(str).length; return n > 20 ? ' fit3' : n > 15 ? ' fit2' : n > 12 ? ' fit1' : ''; }
+
+  async function loadRates(){
+    var now = Date.now(), cached = null;
+    try { cached = JSON.parse(lsGet('ledger_rates','null')); } catch(e){}
+    if(cached && cached.rates && now - cached.t < 12*3600*1000){ state.rates = cached.rates; state.ratesMeta = { source:'live', asOf:cached.asOf }; return; }
+    try {
+      var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null, to = setTimeout(function(){ if(ctrl) ctrl.abort(); }, 6000);
+      var res = await fetch('https://open.er-api.com/v6/latest/AED', ctrl ? { signal:ctrl.signal } : undefined); clearTimeout(to);
+      var j = await res.json();
+      if(j && j.result === 'success' && j.rates){
+        state.rates = j.rates; state.ratesMeta = { source:'live', asOf:j.time_last_update_utc || new Date().toUTCString() };
+        lsSet('ledger_rates', JSON.stringify({ t:now, rates:j.rates, asOf:state.ratesMeta.asOf })); return;
+      }
+    } catch(e){}
+    if(cached && cached.rates){ state.rates = cached.rates; state.ratesMeta = { source:'stale', asOf:cached.asOf }; return; }
+    state.rates = FALLBACK_RATES; state.ratesMeta = { source:'fallback' };
+  }
+  function rateLabel(code){
+    code = code || state.currency; var r = rateFor(code);
+    return '1 AED = ' + curSymbol(code).replace(/\s+$/,'') + ' ' + (r >= 100 ? r.toFixed(1) : r >= 1 ? r.toFixed(2) : r.toFixed(4)).replace(/\.?0+$/,'');
+  }
+  function ratesNote(){
+    var m = state.ratesMeta || { source:'fallback' };
+    if(m.source === 'live') return 'Live rates' + (m.asOf ? ' · ' + new Date(m.asOf).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) : '');
+    if(m.source === 'stale') return 'Last saved rates' + (m.asOf ? ' · ' + new Date(m.asOf).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) : '');
+    return 'Approximate rates (live rates unavailable)';
+  }
+
   function freshState(){
     return {
       session:null, profile:null, portfolios:[], currentPortfolioId:null,
-      properties:[], milestones:[], fxRate:25.96, loadError:'',
-      currency: lsGet('ledger_currency','AED') === 'INR' ? 'INR' : 'AED',
+      properties:[], milestones:[], fxRate:25.96, loadError:'', rates:null, ratesMeta:null,
+      secondary: (function(){ var c = lsGet('ledger_secondary','INR'); return CURRENCIES.some(function(x){ return x.c === c && c !== 'AED'; }) ? c : 'INR'; })(),
+      currency: (function(){ var c = lsGet('ledger_currency','AED'); return CURRENCIES.some(function(x){ return x.c === c; }) ? c : 'AED'; })(),
       privacy: lsGet('ledger_privacy','0') === '1',
       theme: (function(){ var t = lsGet('ledger_theme','light'); return (t==='dark'||t==='system') ? t : 'light'; })(),
       route:{ tab:'dashboard' }, propTab:'overview', tlView:'timeline',
       propQuery:'', propFilter:'all', propSort:'handover',
-      payTab:'soon', payYear:'all', payProp:'all', payQuery:'', payView:'list',
+      payTab:'soon', payRange:'all', payFrom:'', payTo:'', payProp:'all', payQuery:'', payView:'list',
       cfSel:null, animate:true
     };
   }
@@ -855,25 +978,6 @@
   applyTheme(state.theme);
 
   /* ---------------- formatting ---------------- */
-  function toCur(aed, currency){ return currency === 'INR' ? aed * (state.fxRate || 25.96) : aed; }
-  function fmtMoney(aed, currency){
-    currency = currency || state.currency;
-    if(state.privacy) return (currency === 'INR' ? '₹' : 'AED ') + '••••••';
-    var v = Math.round(toCur(Number(aed||0), currency));
-    return (currency === 'INR' ? '₹' : 'AED ') + v.toLocaleString(currency === 'INR' ? 'en-IN' : 'en-US');
-  }
-  function fmtCompact(aed, currency){
-    currency = currency || state.currency;
-    if(state.privacy) return (currency === 'INR' ? '₹' : 'AED ') + '•••';
-    var v = toCur(Number(aed||0), currency), sym = currency === 'INR' ? '₹' : 'AED ', a = Math.abs(v), out;
-    function t(n, d){ return String(Math.round(n * d) / d); }
-    if(currency === 'INR'){
-      out = a >= 1e7 ? t(a/1e7,100)+' Cr' : a >= 1e5 ? t(a/1e5,100)+' L' : a >= 1e3 ? t(a/1e3,10)+'K' : String(Math.round(a));
-    } else {
-      out = a >= 1e6 ? t(a/1e6,100)+'M' : a >= 1e3 ? t(a/1e3,10)+'K' : String(Math.round(a));
-    }
-    return (v < 0 ? '-' : '') + sym + out;
-  }
   function parseDate(d){ return d ? new Date(d + 'T00:00:00') : null; }
   function fmtDate(d){ var dt = parseDate(d); return dt ? dt.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '—'; }
   function fmtDateShort(d){ var dt = parseDate(d); return dt ? dt.toLocaleDateString('en-GB', { day:'numeric', month:'short' }) : '—'; }
@@ -1005,16 +1109,16 @@
     var months = [], i;
     for(i = 0; i < 12; i++){
       var d = new Date(TODAY.getFullYear(), TODAY.getMonth() + i, 1);
-      months.push({ key: d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'), label: d.toLocaleDateString('en-US', { month:'short' }), full: d.toLocaleDateString('en-GB', { month:'long', year:'numeric' }), amt:0, n:0, kind:'m' });
+      months.push({ key: d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'), label: d.toLocaleDateString('en-US', { month:'short' }), full: d.toLocaleDateString('en-GB', { month:'long', year:'numeric' }), amt:0, n:0, kind:'m', items:[] });
     }
-    var od = { key:'od', label:'Late', full:'Overdue', amt:0, n:0, kind:'od' };
-    var later = { key:'later', label:'Later', full:'Beyond 12 months', amt:0, n:0, kind:'later' };
+    var od = { key:'od', label:'Late', full:'Overdue', amt:0, n:0, kind:'od', items:[] };
+    var later = { key:'later', label:'Later', full:'Beyond 12 months', amt:0, n:0, kind:'later', items:[] };
     state.milestones.forEach(function(m){
       if(m.status === 'Paid' || !m.due_date) return;
       var st = milestoneState(m);
-      if(st === 'overdue'){ od.amt += mAmt(m); od.n++; return; }
+      if(st === 'overdue'){ od.amt += mAmt(m); od.n++; od.items.push(m); return; }
       var slot = months.find(function(x){ return x.key === m.due_date.slice(0,7); });
-      if(slot){ slot.amt += mAmt(m); slot.n++; } else { later.amt += mAmt(m); later.n++; }
+      if(slot){ slot.amt += mAmt(m); slot.n++; slot.items.push(m); } else { later.amt += mAmt(m); later.n++; later.items.push(m); }
     });
     var cols = months.slice();
     if(od.n) cols.unshift(od);
@@ -1048,6 +1152,7 @@
 
       var fxRes = await sb.from('fx_rates').select('*').eq('id', 1).single();
       if(fxRes.data) state.fxRate = fxRes.data.aed_to_inr;
+      loadRates().then(function(){ if(state.profile && (state.currency !== 'AED' || state.route.tab === 'account')) render(); });
 
       await loadPortfolioData();
       state.route = parseHash();
@@ -1094,8 +1199,8 @@
 
   async function doLogout(){
     try { await sb.auth.signOut(); } catch(e){}
-    var keep = { currency:state.currency, privacy:state.privacy, theme:state.theme };
-    state = freshState(); state.currency = keep.currency; state.privacy = keep.privacy; state.theme = keep.theme;
+    var keep = { currency:state.currency, privacy:state.privacy, theme:state.theme, secondary:state.secondary, rates:state.rates, ratesMeta:state.ratesMeta };
+    state = freshState(); state.currency = keep.currency; state.privacy = keep.privacy; state.theme = keep.theme; state.secondary = keep.secondary; state.rates = keep.rates; state.ratesMeta = keep.ratesMeta;
     location.hash = '';
     renderLogin();
   }
@@ -1169,7 +1274,7 @@
         '<aside class="login-aside">' +
           '<div class="brand"><div class="brand-mark">L</div><div><div class="brand-name">Ledger</div><div class="brand-tag">Off-plan portfolio tracking</div></div></div>' +
           '<h2 class="serif">Every dirham, every milestone, one calm view.</h2>' +
-          '<p class="lead">Track payment schedules, handover dates, and resale readiness across all of your off-plan properties — in AED or INR.</p>' +
+          '<p class="lead">Track payment schedules, handover dates, and resale readiness across all of your off-plan properties — in AED or the currency you prefer.</p>' +
           '<ul class="login-points">' +
             '<li><span class="lp-ico">'+icon('wallet','',18)+'</span><div><b>Know what is due, before it is due</b>Overdue, due-soon and upcoming payments sorted for you.</div></li>' +
             '<li><span class="lp-ico">'+icon('resale','',18)+'</span><div><b>Resale readiness at a glance</b>See exactly when each unit qualifies for a resale NOC.</div></li>' +
@@ -1258,11 +1363,11 @@
       '<div class="tools">' +
         '<button class="search-trigger" data-act="palette" aria-label="Search and commands">'+icon('search','',16)+'Search…<kbd>'+(/Mac|iPhone|iPad/.test(navigator.platform||'') ? '⌘K' : 'Ctrl K')+'</kbd></button>' +
         '<button class="icon-btn hide-desktop-search" data-act="palette" aria-label="Search" style="display:none">'+icon('search','',18)+'</button>' +
-        '<button class="icon-btn'+(state.refreshing?' spin':'')+'" data-act="refresh" aria-label="Refresh data" title="Refresh data">'+icon('refresh','',18)+'</button>' +
+        '<button class="icon-btn refresh-btn'+(state.refreshing?' spin':'')+'" data-act="refresh" aria-label="Refresh data" title="Refresh data">'+icon('refresh','',18)+'</button>' +
         '<button class="icon-btn'+(state.privacy?' on':'')+'" data-act="privacy" aria-pressed="'+state.privacy+'" aria-label="Hide amounts" title="'+(state.privacy?'Show amounts':'Hide amounts')+'">'+icon(state.privacy?'eyeOff':'eye','',18)+'</button>' +
         '<div class="seg seg-accent" role="group" aria-label="Currency">' +
           '<button data-act="currency" data-v="AED" class="'+(state.currency==='AED'?'active':'')+'" aria-pressed="'+(state.currency==='AED')+'">AED</button>' +
-          '<button data-act="currency" data-v="INR" class="'+(state.currency==='INR'?'active':'')+'" aria-pressed="'+(state.currency==='INR')+'">INR</button></div>' +
+          '<button data-act="currency" data-v="'+state.secondary+'" class="'+(state.currency===state.secondary?'active':'')+'" aria-pressed="'+(state.currency===state.secondary)+'" title="'+esc((CUR_INFO[state.secondary]||{}).n||'')+' — change in Account">'+state.secondary+'</button></div>' +
       '</div>';
 
     var mobileClient = isAdmin && route.tab !== 'account'
@@ -1295,6 +1400,7 @@
 
   /* after every render: kick off ring/bar/count animations */
   function postRender(){
+    fitAll();
     if(REDUCED) return;
     requestAnimationFrame(function(){ requestAnimationFrame(function(){
       app.querySelectorAll('.ring .prog[data-off]').forEach(function(c){ c.style.strokeDashoffset = c.getAttribute('data-off'); });
@@ -1307,11 +1413,19 @@
         if(t0 === null) t0 = ts;
         var k = Math.min(1, (ts - t0) / dur), e = 1 - Math.pow(1 - k, 3);
         el.textContent = fmtMoney(target * e);
-        if(k < 1) requestAnimationFrame(tick); else el.textContent = fmtMoney(target);
+        if(k < 1) requestAnimationFrame(tick); else { el.textContent = fmtMoney(target); fitText(el); }
       }
       if(!state.privacy) requestAnimationFrame(tick);
     });
   }
+  /* shrink long figures to fit their box (any currency, any magnitude) instead of wrapping or clipping */
+  function fitText(el){
+    el.style.fontSize = '';
+    var fs = parseFloat(getComputedStyle(el).fontSize);
+    while(el.scrollWidth > el.clientWidth + 0.5 && fs > 12){ fs -= 1; el.style.fontSize = fs + 'px'; }
+  }
+  function fitAll(){ app.querySelectorAll('.hero-value,.dsum-paid,.nextup .amt,.next-amt,.dstat .v,.kpi-value,.stat .amt,.hero-stat .v').forEach(fitText); }
+  var fitT = null; window.addEventListener('resize', function(){ clearTimeout(fitT); fitT = setTimeout(fitAll, 120); });
   function barFill(pct, extraCls){
     var w = Math.round(Math.min(1, Math.max(0, pct)) * 100) + '%';
     var start = (REDUCED || !state.animate) ? w : '0%';
@@ -1339,7 +1453,7 @@
       '<section class="hero" aria-label="Portfolio summary">' +
         '<div class="hero-top"><div style="min-width:0">' +
           '<div class="hero-label">Total portfolio value</div>' +
-          '<div class="hero-value" data-count="'+toCur(t.value, state.currency)/toCur(1, state.currency)+'"'+(state.animate?' data-anim':'')+'>'+fmtMoney(t.value)+'</div>' +
+          '<div class="hero-value'+fitCls(fmtMoney(t.value))+'" data-count="'+t.value+'"'+(state.animate?' data-anim':'')+'>'+fmtMoney(t.value)+'</div>' +
           '<div class="hero-sub">'+plural(state.properties.length,'property','properties')+' · '+(portfolio ? esc(portfolio.name) : '')+'</div></div>' +
           ring(t.pct, 104, 10, '', 'paid') +
         '</div>' +
@@ -1360,7 +1474,7 @@
         '<section class="card next-card '+(ns==='overdue'?'overdue':ns==='soon'?'soon':'')+'" aria-label="Next payment">' +
           '<div class="next-eyebrow">'+icon('clock','',14,2)+' Next payment</div>' +
           '<div class="next-days"><b>'+big+'</b><span>'+unit+'</span></div>' +
-          '<div class="next-amt">'+fmtMoney(mAmt(nextPay))+'</div>' +
+          '<div class="next-amt'+fitCls(fmtMoney(mAmt(nextPay)))+'">'+fmtMoney(mAmt(nextPay))+'</div>' +
           '<div class="next-what"><b>'+esc(np ? np.project_name : '')+'</b><br>'+esc(nextPay.milestone_event)+' · '+fmtDate(nextPay.due_date)+'</div>' +
           '<div class="next-foot" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" data-act="ics-ms" data-id="'+esc(nextPay.id)+'">'+icon('calendar','',14)+' Remind me</button><button class="btn btn-ghost btn-sm" data-act="open-prop" data-id="'+esc(nextPay.property_id)+'" data-goto-sched="1">Schedule '+icon('arrowRight','',14,2)+'</button></div>' +
         '</section>';
@@ -1394,9 +1508,10 @@
       : '<div class="big" id="cfBig">'+fmtMoney(total12)+'</div><div class="lbl" id="cfLbl">due over the next 12 months</div>';
     var cashCard =
       '<section class="card" aria-label="Payment forecast">' +
-        '<div class="card-head"><div><div class="card-title">Payment forecast</div><div class="card-sub">What is due, month by month. Tap a bar for details.</div></div></div>' +
+        '<div class="card-head"><div><div class="card-title">Payment forecast</div><div class="card-sub">What is due, month by month. Hover or tap a bar; select one to list its payments.</div></div></div>' +
         '<div class="cf"><div class="cf-readout">'+readout+'</div>' +
-          '<div class="cf-scroll"><div class="cf-chart" id="cfChart">'+cfHtml+'</div></div></div>' +
+          '<div class="cf-scroll"><div class="cf-chart" id="cfChart">'+cfHtml+'</div></div>' +
+          '<div id="cfDetail">'+(sel ? cfDetail(sel) : '')+'</div></div>' +
       '</section>';
 
     /* attention */
@@ -1430,12 +1545,27 @@
     var upCard = '<section class="card list-card" aria-label="Upcoming payments"><div class="card-head" style="padding-bottom:8px"><div><div class="card-title">Upcoming payments</div><div class="card-sub">Next '+upcoming.length+' by due date</div></div><button class="link-btn" data-act="nav" data-to="payments">View all '+icon('arrowRight','',14,2)+'</button></div>' + upHtml + '</section>';
 
     return (
-      '<div class="page-head"><div><h1>'+greeting()+', '+esc(firstName(state.profile.full_name))+'</h1><p>Here is where your portfolio stands today'+(state.currency==='INR' ? ' · 1 AED = ₹'+esc(state.fxRate) : '')+'.</p></div></div>' +
+      '<div class="page-head"><div><h1>'+greeting()+', '+esc(firstName(state.profile.full_name))+'</h1><p>Here is where your portfolio stands today'+(state.currency!=='AED' ? ' · '+esc(rateLabel()) : '')+'.</p></div></div>' +
       '<div class="grid g-hero">' + hero + nextCard + '</div>' +
       kpis +
       '<div class="grid g-two">' + cashCard + attCard + '</div>' +
       '<div class="grid g-two even">' + allocCard + upCard + '</div>'
     );
+  }
+
+  function cfDetail(c){
+    if(!c || !c.items.length) return '<div class="cf-empty">Nothing due in ' + esc(c ? c.full : '') + '.</div>';
+    return '<div class="cf-list">' + c.items.slice().sort(byDue).map(function(m){
+      var p = propOf(m.property_id);
+      return '<button class="cf-item" data-act="open-prop" data-id="'+esc(m.property_id)+'" data-goto-sched="1"><span class="d">'+fmtDateShort(m.due_date)+'</span><span class="t"><b>'+esc(p ? p.project_name : '')+'</b><span>'+esc(m.milestone_event)+'</span></span><span class="a">'+fmtMoney(mAmt(m))+'</span></button>';
+    }).join('') + '</div>';
+  }
+  function cfShow(i){
+    var cols = cashflow(), c = i != null ? cols[i] : null, big = document.getElementById('cfBig'), lbl = document.getElementById('cfLbl');
+    if(!big) return;
+    var total12 = cols.reduce(function(a,x){ return a + (x.kind === 'm' ? x.amt : 0); }, 0);
+    big.textContent = fmtMoney(c ? c.amt : total12);
+    lbl.textContent = c ? c.full + ' · ' + plural(c.n,'payment') : 'due over the next 12 months';
   }
 
   /* one payment row (used on dashboard + payments list) */
@@ -1483,7 +1613,7 @@
       '<div class="pcard-head"><span class="p-ico">'+icon('building','',20)+'</span>' +
         '<div style="min-width:0"><div class="pcard-name">'+esc(p.project_name)+'</div><div class="pcard-sub">'+esc(p.developer||'—')+' · '+esc(p.location||'—')+'</div></div>' +
         '</div>' +
-      '<div class="facts"><span class="pill">'+esc(p.status||'—')+'</span>' + (resale.eligible ? '<span class="pill good">'+icon('resale','',12,2)+' Resale ready</span>' : '') + '<span><b>'+esc(p.unit_type||'—')+'</b>'+(p.bedrooms?' · '+Math.trunc(p.bedrooms)+' BR':'')+'</span>' +
+      '<div class="facts">' + (p.status && !/construction/i.test(p.status) ? '<span class="pill">'+esc(p.status)+'</span>' : '') + (resale.eligible ? '<span class="pill good">'+icon('resale','',12,2)+' Resale ready</span>' : '') + '<span><b>'+esc(p.unit_type||'—')+'</b>'+(p.bedrooms?' · '+Math.trunc(p.bedrooms)+' BR':'')+'</span>' +
         (p.size_sqft ? '<span><b>'+Math.round(p.size_sqft).toLocaleString('en-US')+'</b> sqft</span>' : '') +
         '<span>Handover <b>'+(p.handover_date ? fmtDate(p.handover_date) : '—')+'</b></span></div>' +
       '<div class="pcard-prog"><div class="row"><span><b>'+fmtMoney(p.total_paid_aed)+'</b> paid</span><span>'+Math.round(pct*100)+'% of '+fmtCompact(p.total_unit_price_aed)+'</span></div>' + barFill(pct) + '</div>' +
@@ -1495,15 +1625,7 @@
     if(!list.length){
       return emptyState('search','No properties match','Try a different search or clear the filters.','<button class="btn btn-ghost btn-sm" data-act="clear-prop-filters">Clear filters</button>');
     }
-    var value = list.reduce(function(a,p){ return a + Number(p.total_unit_price_aed||0); }, 0);
-    var paid = list.reduce(function(a,p){ return a + Number(p.total_paid_aed||0); }, 0);
-    return '<div class="card summary-strip">' +
-        '<div><div class="k">Showing</div><div class="v">'+list.length+' of '+state.properties.length+'</div></div>' +
-        '<div><div class="k">Total value</div><div class="v">'+fmtCompact(value)+'</div></div>' +
-        '<div><div class="k">Paid</div><div class="v">'+fmtCompact(paid)+'</div></div>' +
-        '<div><div class="k">Avg. progress</div><div class="v">'+Math.round(value > 0 ? paid/value*100 : 0)+'%</div></div>' +
-      '</div>' +
-      '<div class="prop-grid">' + list.map(propertyCard).join('') + '</div>';
+    return '<div class="prop-grid">' + list.map(propertyCard).join('') + '</div>';
   }
 
   function renderProperties(){
@@ -1511,16 +1633,17 @@
     var statuses = []; state.properties.forEach(function(p){ if(p.status && statuses.indexOf(p.status) === -1) statuses.push(p.status); });
     var resaleN = state.properties.filter(function(p){ return resaleEligibility(p).eligible; }).length;
     function chip(id, label, n){ return '<button class="chip'+(state.propFilter===id?' active':'')+'" data-act="prop-filter" data-v="'+esc(id)+'">'+esc(label)+' <span class="n">'+n+'</span></button>'; }
-    var chips = chip('all','All',state.properties.length) +
-      statuses.map(function(s){ return chip(s, s, state.properties.filter(function(p){ return p.status === s; }).length); }).join('') +
-      (resaleN ? chip('resale','Resale-ready',resaleN) : '');
-    return '<div class="page-head"><div><h1>Properties</h1><p>'+plural(state.properties.length,'unit')+' in this portfolio.</p></div></div>' +
+    var chips = (statuses.length > 1 || resaleN) ? chip('all','All',state.properties.length) +
+      (statuses.length > 1 ? statuses.map(function(s){ return chip(s, s, state.properties.filter(function(p){ return p.status === s; }).length); }).join('') : '') +
+      (resaleN ? chip('resale','Resale-ready',resaleN) : '') : '';
+    var tt = portfolioTotals();
+    return '<div class="page-head"><div><h1>Properties</h1><p>'+plural(state.properties.length,'unit')+' · '+fmtCompact(tt.value)+' total · '+Math.round(tt.pct*100)+'% paid</p></div></div>' +
       '<div class="toolbar">' +
         '<div class="input-wrap has-ico grow">'+icon('search','',18)+'<input class="input" id="propSearch" type="search" placeholder="Search name, developer or location" value="'+esc(state.propQuery)+'" aria-label="Search properties"></div>' +
         '<select class="select" id="propSort" aria-label="Sort properties">' +
           [['handover','Handover: soonest'],['value','Value: highest'],['progress','Most paid'],['name','Name: A–Z']].map(function(o){ return '<option value="'+o[0]+'"'+(state.propSort===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('') +
         '</select></div>' +
-      '<div class="chips" role="group" aria-label="Filter by status">'+chips+'</div>' +
+      (chips ? '<div class="chips" role="group" aria-label="Filter by status">'+chips+'</div>' : '') +
       '<div id="propResults">'+propertyResults()+'</div>';
   }
 
@@ -1593,25 +1716,26 @@
     function X(d){ return Math.min(100, Math.max(0, (d - t0) / span * 100)); }
     function Y(v){ return 100 - Math.min(1, v / denom) * 100; }
     var paid = dated.filter(function(m){ return m.status === 'Paid'; }), open = dated.filter(function(m){ return m.status !== 'Paid'; });
-    var cum = 0, act = 'M0,100', dots = '';
-    paid.forEach(function(m){ cum += mAmt(m); var x = X(parseDate(m.due_date)); act += ' H'+x+' V'+Y(cum); dots += '<span class="jdot paid" style="left:'+x+'%;top:'+Y(cum)+'%" title="'+esc(m.milestone_event)+'"></span>'; });
+    var cum = 0, act = 'M0,100', dots = '', pts = [];
+    function addPt(m, x, y, st){ pts.push({ x:+x.toFixed(2), y:+y.toFixed(2), t:m.milestone_event, d:m.due_date, amt:mAmt(m), cum:Math.round(Math.min(1, cum/denom)*100), cumAmt:cum, st:st }); return pts.length - 1; }
+    paid.forEach(function(m){ cum += mAmt(m); var x = X(parseDate(m.due_date)), i = addPt(m, x, Y(cum), 'paid'); act += ' H'+x+' V'+Y(cum); dots += '<button class="jdot paid" data-i="'+i+'" style="left:'+x+'%;top:'+Y(cum)+'%" aria-label="'+esc(m.milestone_event)+', paid"></button>'; });
     var xt = X(TODAY), cumPaid = cum;
     act += ' H' + xt;
     var fill = act + ' V100 Z', proj = 'M' + xt + ',' + Y(cumPaid);
     open.forEach(function(m){
-      cum += mAmt(m); var d = parseDate(m.due_date), x = Math.max(X(d), xt), od = d < TODAY;
+      cum += mAmt(m); var d = parseDate(m.due_date), x = Math.max(X(d), xt), od = d < TODAY, i = addPt(m, x, Y(cum), od ? 'overdue' : 'open');
       proj += ' H'+x+' V'+Y(cum);
-      dots += '<span class="jdot'+(od?' overdue':'')+'" style="left:'+x+'%;top:'+Y(cum)+'%" title="'+esc(m.milestone_event)+'"></span>';
+      dots += '<button class="jdot'+(od?' overdue':'')+'" data-i="'+i+'" style="left:'+x+'%;top:'+Y(cum)+'%" aria-label="'+esc(m.milestone_event)+(od?', overdue':', scheduled')+'"></button>';
     });
     proj += ' H100';
     var thr = resale && resale.applicable && resale.reqPct ? '<div class="jthr" style="top:'+Y(resale.reqPct * Number(p.total_unit_price_aed||0))+'%"><span>Resale NOC '+Math.round(resale.reqPct*100)+'%</span></div>' : '';
     var hoLine = ho && ho >= t0 && ho <= t1 ? '<div class="jline ho" style="left:'+X(ho)+'%"><span>Handover</span></div>' : '';
-    return '<div class="jchart" role="img" aria-label="Cumulative payments over time">' +
+    return '<div class="jchart" data-pts="'+esc(JSON.stringify(pts))+'" aria-label="Cumulative payments over time. Hover, tap or use the dots to inspect each milestone.">' +
         [0,50,100].map(function(v){ return '<div class="jgrid" style="top:'+(100-v)+'%"><span>'+v+'%</span></div>'; }).join('') + thr +
         '<svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="'+fill+'" fill="var(--accent-soft)" stroke="none"/>' +
           '<path d="'+proj+'" fill="none" stroke="var(--ink-faint)" stroke-width="2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>' +
           '<path d="'+act+'" fill="none" stroke="var(--accent)" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>' +
-        '<div class="jline today" style="left:'+xt+'%"><span>Today</span></div>' + hoLine + dots + '</div>' +
+        '<div class="jline today" style="left:'+xt+'%"><span>Today</span></div>' + hoLine + '<div class="jcross" hidden></div>' + dots + '<div class="jtip" hidden></div></div>' +
       '<div class="jaxis"><span>'+monthYear(t0)+'</span><span>'+monthYear(t1)+'</span></div>' +
       '<div class="jkey"><span><i></i>Paid</span><span><i class="dash"></i>Scheduled</span></div>';
   }
@@ -1648,11 +1772,11 @@
     else if(pendAmt > 0) segs.push({ label:'Remaining', color:'var(--surface-3)', amt:pendAmt });
     segs = segs.filter(function(d){ return d.amt > 0; });
     var segTotal = segs.reduce(function(a,d){ return a + d.amt; }, 0);
-    var segBar = segTotal > 0 ? '<div class="seg-bar" role="img" aria-label="Payment progress by status">' + segs.map(function(d){ return '<i style="flex:'+Math.max(d.amt,segTotal*0.01)+';background:'+d.color+'" title="'+d.label+'"></i>'; }).join('') + '</div>' +
+    var segBar = segTotal > 0 ? '<div class="seg-bar" role="img" aria-label="Payment progress by status">' + segs.map(function(d){ return '<i data-act="prop-tab" data-v="schedule" tabindex="0" role="button" style="flex:'+Math.max(d.amt,segTotal*0.01)+';background:'+d.color+'" title="'+esc(d.label+' · '+fmtMoney(d.amt))+' — open schedule"></i>'; }).join('') + '</div>' +
       '<div class="seg-legend">' + segs.map(function(d){ return '<span><span class="dot" style="background:'+d.color+'"></span>'+d.label+' <b>'+fmtCompact(d.amt)+'</b></span>'; }).join('') + '</div>' : barFill(pct,'lg');
     var nd = nm ? daysUntil(nm.due_date) : null, ns = nm ? milestoneState(nm) : null;
     var summary =
-      '<section class="card dsum"><div class="dsum-top"><div><div class="dsum-paid">'+fmtMoney(p.total_paid_aed)+'</div><div class="dsum-of">paid of '+fmtMoney(p.total_unit_price_aed)+'</div></div><span class="dsum-pct">'+Math.round(pct*100)+'% paid</span></div>' +
+      '<section class="card dsum"><div class="dsum-top"><div><div class="dsum-paid'+fitCls(fmtMoney(p.total_paid_aed))+'">'+fmtMoney(p.total_paid_aed)+'</div><div class="dsum-of">paid of '+fmtMoney(p.total_unit_price_aed)+'</div></div><span class="dsum-pct">'+Math.round(pct*100)+'% paid</span></div>' +
       segBar +
       '<div class="dstats">' +
         '<div class="dstat"><div class="k">Remaining</div><div class="v">'+fmtCompact(p.total_pending_aed)+'</div><div class="s">'+plural(ms.length - b.paid.length,'milestone')+' left</div></div>' +
@@ -1687,7 +1811,7 @@
       var d = daysUntil(nm.due_date), st = milestoneState(nm);
       nextCard = '<section class="card nextup"><div class="nextup-top"><div class="card-title">Next payment</div><span class="pill '+STATE_PILL[st]+'">'+(st==='overdue' ? Math.abs(d)+' days overdue' : relDays(d))+'</span></div>' +
         '<h3>'+esc(nm.milestone_event)+'</h3><div class="when">Due '+fmtDate(nm.due_date)+(nm.pct!=null ? ' · '+fmtPct(nm.pct)+' of price' : '')+'</div>' +
-        '<div class="amt">'+fmtMoney(mAmt(nm))+'<small>+ VAT '+fmtMoney(nm.vat_aed)+'</small></div>' +
+        '<div class="amt'+fitCls(fmtMoney(mAmt(nm)))+'">'+fmtMoney(mAmt(nm))+'<small>+ VAT '+fmtCompact(nm.vat_aed)+'</small></div>' +
         '<div class="nextup-actions"><button class="btn btn-sm" data-act="ics-ms" data-id="'+esc(nm.id)+'">'+icon('calendar','',15)+' Remind me</button><button class="btn btn-ghost btn-sm" data-act="prop-tab" data-v="schedule">Full schedule</button></div></section>';
     } else {
       var undated = ms.filter(function(m){ return m.status !== 'Paid' && !m.due_date; }).length;
@@ -1852,11 +1976,32 @@
     { id:'undecided', label:'Date TBC', empty:['check','Every milestone is dated','Nothing is waiting on a confirmed due date.'] },
     { id:'paid', label:'Paid', empty:['wallet','No payments recorded','Paid milestones will be listed here.'] }
   ];
-  function milestoneYear(m){ return m.year || (m.due_date ? Number(m.due_date.slice(0,4)) : null); }
+  var RANGES = [['all','All time'],['month','This month'],['last30','Last 30 days'],['next30','Next 30 days'],['next90','Next 90 days'],['quarter','This quarter'],['year','This year'],['custom','Custom range…']];
+  function isoDate(d){ return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
+  function addDays(d, n){ var x = new Date(d); x.setDate(x.getDate() + n); return x; }
+  function rangeBounds(){
+    var r = state.payRange, t = TODAY, y = t.getFullYear(), m = t.getMonth(), q;
+    if(r === 'month') return [isoDate(new Date(y, m, 1)), isoDate(new Date(y, m+1, 0))];
+    if(r === 'last30') return [isoDate(addDays(t,-30)), isoDate(t)];
+    if(r === 'next30') return [isoDate(t), isoDate(addDays(t,30))];
+    if(r === 'next90') return [isoDate(t), isoDate(addDays(t,90))];
+    if(r === 'quarter'){ q = Math.floor(m/3)*3; return [isoDate(new Date(y, q, 1)), isoDate(new Date(y, q+3, 0))]; }
+    if(r === 'year') return [y + '-01-01', y + '-12-31'];
+    if(r === 'custom' && (state.payFrom || state.payTo)) return [state.payFrom || '0000-01-01', state.payTo || '9999-12-31'];
+    return null;
+  }
+  function rangeLabel(){
+    var b = rangeBounds(); if(!b) return '';
+    if(state.payRange === 'custom'){
+      if(state.payFrom && state.payTo) return fmtDate(state.payFrom) + ' – ' + fmtDate(state.payTo);
+      return state.payFrom ? 'From ' + fmtDate(state.payFrom) : 'Until ' + fmtDate(state.payTo);
+    }
+    return fmtDate(b[0]) + ' – ' + fmtDate(b[1]);
+  }
   function paymentsFiltered(){
-    var q = state.payQuery.trim().toLowerCase();
+    var q = state.payQuery.trim().toLowerCase(), bounds = rangeBounds();
     return state.milestones.filter(function(m){
-      if(state.payYear !== 'all' && String(milestoneYear(m)) !== String(state.payYear)) return false;
+      if(bounds && (!m.due_date || m.due_date < bounds[0] || m.due_date > bounds[1])) return false;
       if(state.payProp !== 'all' && m.property_id !== state.payProp) return false;
       if(q){
         var p = propOf(m.property_id);
@@ -1872,10 +2017,10 @@
     var list = b[tab].slice().sort(byDue); if(tab === 'paid') list.reverse();
     var def = PAY_TABS.filter(function(t){ return t.id === tab; })[0];
     if(!list.length){
-      var filtered = state.payQuery || state.payYear !== 'all' || state.payProp !== 'all';
-      return '<div class="card">'+ (filtered ? emptyState('search','No payments match','Nothing in this tab fits the current search or filters.','<button class="btn btn-ghost btn-sm" data-act="clear-pay-filters">Clear filters</button>') : emptyState(def.empty[0], def.empty[1], def.empty[2])) + '</div>';
+      var filtered = state.payQuery || state.payRange !== 'all' || state.payProp !== 'all';
+      return '<div class="card">'+ (filtered ? emptyState('search','No payments match', (tab === 'undecided' && state.payRange !== 'all') ? 'Milestones without a date can only be listed under “All time”.' : 'Nothing in this tab fits the current search or filters.','<button class="btn btn-ghost btn-sm" data-act="clear-pay-filters">Clear filters</button>') : emptyState(def.empty[0], def.empty[1], def.empty[2])) + '</div>';
     }
-    var meta = '<div class="results-meta"><span>'+plural(list.length,'payment')+' · <b class="mono" style="color:var(--ink)">'+fmtMoney(sumAmt(list))+'</b></span>' +
+    var meta = '<div class="results-meta"><span>'+plural(list.length,'payment')+' · <b class="mono" style="color:var(--ink)">'+fmtMoney(sumAmt(list))+'</b>'+(rangeLabel() ? ' · <span class="rl">'+esc(rangeLabel())+'</span>' : '')+(rangeBounds() && state.payTab === 'undecided' ? '' : '')+'</span>' +
       '<span style="display:flex;gap:14px">'+(state.payTab === 'paid' ? '' : '<button class="link-btn" data-act="ics-list">'+icon('calendar','',14,2)+' Add to calendar</button>')+'<button class="link-btn" data-act="export">'+icon('download','',14,2)+' Export CSV</button></span></div>';
 
     if(state.payView === 'table'){
@@ -1906,8 +2051,6 @@
   }
 
   function renderPayments(){
-    var years = {}; state.milestones.forEach(function(m){ var y = milestoneYear(m); if(y) years[y] = true; });
-    var yearList = Object.keys(years).map(Number).sort(function(a,b){ return a-b; });
     var b = bucketMilestones(paymentsFiltered());
     var tab = PAY_TABS.some(function(t){ return t.id === state.payTab; }) ? state.payTab : 'soon';
 
@@ -1922,8 +2065,8 @@
         '<div class="input-wrap has-ico grow">'+icon('search','',18)+'<input class="input" id="paySearch" type="search" placeholder="Search milestone or property" value="'+esc(state.payQuery)+'" aria-label="Search payments"></div>' +
         '<select class="select" id="payProp" aria-label="Filter by property"><option value="all">All properties</option>' +
           state.properties.map(function(p){ return '<option value="'+esc(p.id)+'"'+(state.payProp===p.id?' selected':'')+'>'+esc(p.project_name)+'</option>'; }).join('') + '</select>' +
-        '<select class="select" id="payYear" aria-label="Filter by year"><option value="all">All years</option>' +
-          yearList.map(function(y){ return '<option value="'+y+'"'+(String(state.payYear)===String(y)?' selected':'')+'>'+y+'</option>'; }).join('') + '</select>' +
+        '<select class="select" id="payRange" aria-label="Date range">' + RANGES.map(function(r){ return '<option value="'+r[0]+'"'+(state.payRange===r[0]?' selected':'')+'>'+r[1]+'</option>'; }).join('') + '</select>' +
+        (state.payRange === 'custom' ? '<div class="range-inputs"><label>From<input class="input" type="date" id="payFrom" value="'+esc(state.payFrom)+'"'+(state.payTo?' max="'+esc(state.payTo)+'"':'')+'></label><label>To<input class="input" type="date" id="payTo" value="'+esc(state.payTo)+'"'+(state.payFrom?' min="'+esc(state.payFrom)+'"':'')+'></label></div>' : '') +
       '</div>' +
       '<div id="payResults">'+paymentsResults()+'</div>';
   }
@@ -1980,7 +2123,9 @@
         '<div class="card"><div class="card-head" style="padding-bottom:6px"><div class="card-title">Preferences</div></div>' +
           '<div class="pref"><div class="t"><b>Appearance</b><span>Match your device or choose a theme</span></div><div class="seg" role="group" aria-label="Theme">' +
             themeOpts.map(function(o){ return '<button data-act="theme" data-v="'+o[0]+'" class="'+(state.theme===o[0]?'active':'')+'" aria-pressed="'+(state.theme===o[0])+'" title="'+o[2]+'">'+icon(o[1],'',15)+'<span class="hide-xs"> '+o[2]+'</span></button>'; }).join('') + '</div></div>' +
-          '<div class="pref"><div class="t"><b>Currency</b><span>1 AED = ₹'+esc(state.fxRate)+'</span></div><div class="seg seg-accent" role="group" aria-label="Currency"><button data-act="currency" data-v="AED" class="'+(state.currency==='AED'?'active':'')+'">AED</button><button data-act="currency" data-v="INR" class="'+(state.currency==='INR'?'active':'')+'">INR</button></div></div>' +
+          '<div class="pref"><div class="t"><b>Primary currency</b><span>AED — all figures are stored in dirhams</span></div><span class="pill accent">Default</span></div>' +
+          '<div class="pref"><div class="t"><b>Secondary currency</b><span>'+esc(rateLabel(state.secondary))+' · '+esc(ratesNote())+'</span></div>' +
+            '<select class="select" id="secondarySelect" aria-label="Secondary currency">' + CURRENCIES.filter(function(x){ return x.c !== 'AED'; }).map(function(x){ return '<option value="'+x.c+'"'+(state.secondary===x.c?' selected':'')+'>'+x.c+' · '+esc(x.n)+'</option>'; }).join('') + '</select></div>' +
           '<div class="pref"><div class="t"><b>Data</b><span>'+(state.updatedAt ? 'Updated '+new Date(state.updatedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : 'Live from your portfolio')+'</span></div><button class="btn btn-ghost btn-sm" data-act="refresh">'+icon('refresh','',14)+' Refresh</button></div>' +
           '<div class="pref"><div class="t"><b>Hide amounts</b><span>Mask every figure — handy in public</span></div><button class="switch" role="switch" data-act="privacy" aria-checked="'+state.privacy+'" aria-label="Hide amounts"></button></div>' +
         '</div>' +
@@ -2024,7 +2169,7 @@
     });
     items.push(
       { g:'Actions', ico:'eye', t:state.privacy ? 'Show amounts' : 'Hide amounts', sub:'H', run:function(){ setPrivacy(!state.privacy); } },
-      { g:'Actions', ico:'money', t:'Switch to ' + (state.currency === 'AED' ? 'INR' : 'AED'), sub:'C', run:function(){ setCurrency(state.currency === 'AED' ? 'INR' : 'AED'); } },
+      { g:'Actions', ico:'money', t:'Switch to ' + (state.currency === 'AED' ? state.secondary : 'AED'), sub:'C', run:function(){ setCurrency(state.currency === 'AED' ? state.secondary : 'AED'); } },
       { g:'Actions', ico:'moon', t:'Theme: Light', run:function(){ setTheme('light'); } },
       { g:'Actions', ico:'moon', t:'Theme: Dark', run:function(){ setTheme('dark'); } },
       { g:'Actions', ico:'monitor', t:'Theme: Match device', run:function(){ setTheme('system'); } },
@@ -2092,12 +2237,18 @@
     if(!document.hidden && state.profile && state.updatedAt && Date.now() - state.updatedAt > 5*60*1000) refreshData(false);
   });
   function setCurrency(c){ state.currency = c; lsSet('ledger_currency', c); render(); }
+  function setSecondary(c){
+    var wasSecondary = state.currency !== 'AED';
+    state.secondary = c; lsSet('ledger_secondary', c);
+    if(wasSecondary){ state.currency = c; lsSet('ledger_currency', c); }
+    render(); toast('Secondary currency: ' + c);
+  }
   function setPrivacy(on){ state.privacy = on; lsSet('ledger_privacy', on ? '1' : '0'); render(); toast(on ? 'Amounts hidden' : 'Amounts visible'); }
   function setTheme(t){ state.theme = t; lsSet('ledger_theme', t); applyTheme(t); render(); }
   async function switchClient(id){
     if(id === state.currentPortfolioId) return;
     state.currentPortfolioId = id;
-    state.propQuery = ''; state.propFilter = 'all'; state.payProp = 'all'; state.payQuery = ''; state.payYear = 'all';
+    state.propQuery = ''; state.propFilter = 'all'; state.payProp = 'all'; state.payQuery = ''; state.payRange = 'all'; state.payFrom = ''; state.payTo = '';
     renderSkeleton();
     try { await loadPortfolioData(); } catch(e){ renderFatal('We could not load that client.', true); return; }
     state.route = { tab:'dashboard' }; location.hash = '#/'; state.animate = true; render();
@@ -2120,13 +2271,13 @@
     logout: function(){ doLogout(); },
     retry: function(){ if(state.profile){ loadEverything(); } else { init(); } },
     reload: function(){ location.reload(); },
-    'pay-tab': function(el){ state.payTab = el.getAttribute('data-tab'); state.payProp = 'all'; state.payQuery = ''; state.payYear = 'all'; go('payments'); },
+    'pay-tab': function(el){ state.payTab = el.getAttribute('data-tab'); state.payProp = 'all'; state.payQuery = ''; state.payRange = 'all'; state.payFrom = ''; state.payTo = ''; go('payments'); },
     'pay-tab-local': function(el){ state.payTab = el.getAttribute('data-tab'); refreshPayments(); },
     'pay-view': function(el){ state.payView = el.getAttribute('data-v'); render(); },
     'prop-filter': function(el){ state.propFilter = el.getAttribute('data-v'); render(); },
     'prop-filter-go': function(el){ state.propFilter = el.getAttribute('data-v') || el.getAttribute('data-tab'); go('properties'); },
     'clear-prop-filters': function(){ state.propQuery = ''; state.propFilter = 'all'; render(); },
-    'clear-pay-filters': function(){ state.payQuery = ''; state.payYear = 'all'; state.payProp = 'all'; render(); },
+    'clear-pay-filters': function(){ state.payQuery = ''; state.payRange = 'all'; state.payFrom = ''; state.payTo = ''; state.payProp = 'all'; render(); },
     'prop-tab': function(el){ state.propTab = el.getAttribute('data-v'); render(); },
     'tl-view': function(el){ state.tlView = el.getAttribute('data-v'); render(); },
     export: function(){ exportCsv(); },
@@ -2139,10 +2290,8 @@
     'switch-client': function(el){ switchClient(el.getAttribute('data-id')); },
     cf: function(el){
       var i = Number(el.getAttribute('data-i')); state.cfSel = state.cfSel === i ? null : i;
-      var cols = cashflow(), sel = state.cfSel != null ? cols[state.cfSel] : null;
-      var total12 = cols.reduce(function(a,c){ return a + (c.kind === 'm' ? c.amt : 0); }, 0);
-      document.getElementById('cfBig').textContent = fmtMoney(sel ? sel.amt : total12);
-      document.getElementById('cfLbl').textContent = sel ? sel.full + ' · ' + plural(sel.n,'payment') : 'due over the next 12 months';
+      var cols = cashflow(); cfShow(state.cfSel);
+      var d = document.getElementById('cfDetail'); if(d) d.innerHTML = state.cfSel != null ? cfDetail(cols[state.cfSel]) : '';
       document.querySelectorAll('#cfChart .cf-col').forEach(function(c, k){ c.classList.toggle('sel', k === state.cfSel); });
     },
     'toggle-pw': function(el){
@@ -2190,10 +2339,43 @@
   document.addEventListener('change', function(e){
     var id = e.target.id, v = e.target.value;
     if(id === 'propSort'){ state.propSort = v; var r = document.getElementById('propResults'); if(r) r.innerHTML = propertyResults(); }
+    else if(id === 'secondarySelect'){ setSecondary(v); }
     else if(id === 'payProp'){ state.payProp = v; refreshPayments(); }
-    else if(id === 'payYear'){ state.payYear = v; refreshPayments(); }
+    else if(id === 'payRange'){ state.payRange = v; if(v === 'custom' && !state.payFrom && !state.payTo){ state.payFrom = isoDate(TODAY); state.payTo = isoDate(addDays(TODAY, 30)); } render(); }
+    else if(id === 'payFrom' || id === 'payTo'){ if(id === 'payFrom') state.payFrom = v; else state.payTo = v; refreshPayments(); }
     else if(id === 'portfolioSwitch' || id === 'portfolioSwitchM'){ switchClient(v); }
   });
+
+  document.addEventListener('mouseover', function(e){ var c = e.target.closest && e.target.closest('#cfChart .cf-col'); if(c) cfShow(Number(c.getAttribute('data-i'))); });
+  document.addEventListener('mouseout', function(e){ var c = e.target.closest && e.target.closest('#cfChart .cf-col'); if(c && !(e.relatedTarget && c.contains(e.relatedTarget))) cfShow(state.cfSel); });
+  document.addEventListener('focusin', function(e){ var c = e.target.closest && e.target.closest('#cfChart .cf-col'); if(c) cfShow(Number(c.getAttribute('data-i'))); var d = e.target.closest && e.target.closest('.jdot'); if(d) jShow(d.closest('.jchart'), Number(d.getAttribute('data-i'))); });
+
+  /* payment-journey scrubber: hover / drag / tap anywhere on the chart snaps to the nearest milestone */
+  function jPts(chart){ try { return JSON.parse(chart.getAttribute('data-pts')); } catch(e){ return []; } }
+  function jShow(chart, i){
+    if(!chart) return; var pts = jPts(chart), pt = pts[i], cross = chart.querySelector('.jcross'), tip = chart.querySelector('.jtip');
+    if(!pt){ cross.hidden = true; tip.hidden = true; return; }
+    chart.querySelectorAll('.jdot').forEach(function(d){ d.classList.toggle('hot', Number(d.getAttribute('data-i')) === i); });
+    cross.style.left = pt.x + '%'; cross.hidden = false;
+    var stTxt = pt.st === 'paid' ? 'Paid' : pt.st === 'overdue' ? 'Overdue' : 'Scheduled';
+    tip.innerHTML = '<b>'+esc(pt.t)+'</b><span>'+esc(fmtDate(pt.d))+' · '+stTxt+'</span><span class="row"><i>'+(pt.st === 'paid' ? 'Paid' : 'Due')+'</i> '+esc(fmtMoney(pt.amt))+'</span><span class="row"><i>Cumulative</i> '+pt.cum+'% · '+esc(fmtCompact(pt.cumAmt))+'</span>';
+    tip.hidden = false;
+    var w = chart.clientWidth, left = pt.x / 100 * w, tw = tip.offsetWidth;
+    tip.style.left = Math.max(0, Math.min(w - tw, left - tw / 2)) + 'px';
+    tip.style.top = Math.max(-8, pt.y / 100 * chart.clientHeight - tip.offsetHeight - 14) + 'px';
+  }
+  function jNearest(chart, clientX){
+    var r = chart.getBoundingClientRect(), px = (clientX - r.left) / r.width * 100, pts = jPts(chart), best = -1, bd = 1e9;
+    pts.forEach(function(pt, i){ var d = Math.abs(pt.x - px); if(d < bd){ bd = d; best = i; } });
+    return best;
+  }
+  document.addEventListener('pointermove', function(e){ var c = e.target.closest && e.target.closest('.jchart'); if(c && (e.pointerType !== 'touch' || e.buttons)) jShow(c, jNearest(c, e.clientX)); });
+  document.addEventListener('pointerdown', function(e){
+    var c = e.target.closest && e.target.closest('.jchart');
+    document.querySelectorAll('.jchart').forEach(function(x){ if(x !== c){ x.querySelector('.jtip').hidden = true; x.querySelector('.jcross').hidden = true; x.querySelectorAll('.jdot.hot').forEach(function(d){ d.classList.remove('hot'); }); } });
+    if(c) jShow(c, jNearest(c, e.clientX));
+  });
+  document.addEventListener('pointerleave', function(e){ var c = e.target.closest && e.target.closest('.jchart'); if(c && e.pointerType === 'mouse'){ c.querySelector('.jtip').hidden = true; c.querySelector('.jcross').hidden = true; } }, true);
 
   var chord = null, chordT = null;
   document.addEventListener('keydown', function(e){
@@ -2216,7 +2398,7 @@
     }
     if(k === 'g'){ chord = 'g'; clearTimeout(chordT); chordT = setTimeout(function(){ chord = null; }, 900); }
     else if(k === 'h') setPrivacy(!state.privacy);
-    else if(k === 'c') setCurrency(state.currency === 'AED' ? 'INR' : 'AED');
+    else if(k === 'c') setCurrency(state.currency === 'AED' ? state.secondary : 'AED');
     else if(k === '/'){ var s = document.getElementById('propSearch') || document.getElementById('paySearch'); if(s){ e.preventDefault(); s.focus(); } else { e.preventDefault(); openPalette(); } }
   });
 
