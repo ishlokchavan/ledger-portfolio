@@ -25,6 +25,7 @@ export function TopBar() {
 
         {canSwitch ? (
           <TouchableOpacity
+            activeOpacity={0.7}
             onPress={() => setOpen(true)}
             style={[styles.switchBtn, { borderColor: colors.border, backgroundColor: colors.surface2, borderRadius: radii.sm }]}
           >
@@ -47,6 +48,7 @@ export function TopBar() {
             {portfolios.map((p) => (
               <TouchableOpacity
                 key={p.id}
+                activeOpacity={0.7}
                 style={[styles.option, p.id === currentPortfolioId && { backgroundColor: colors.accentSoft, borderRadius: radii.sm }]}
                 onPress={() => {
                   setCurrentPortfolioId(p.id);
@@ -67,7 +69,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   mark: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
-  switchBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1, maxWidth: 170 },
+  switchBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1, maxWidth: 170, minHeight: 38, justifyContent: 'center' },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   sheet: { padding: 16, paddingBottom: 32, borderWidth: 1, maxHeight: '60%' },
   option: { paddingVertical: 12, paddingHorizontal: 10 },

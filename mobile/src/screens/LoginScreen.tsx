@@ -100,6 +100,7 @@ export function LoginScreen() {
             </View>
 
             <TouchableOpacity
+              activeOpacity={0.8}
               style={[styles.btn, { backgroundColor: colors.accent, borderRadius: radii.sm, opacity: submitting ? 0.6 : 1 }]}
               onPress={doLogin}
               disabled={submitting}
@@ -114,7 +115,7 @@ export function LoginScreen() {
             <View style={[styles.demoBox, { backgroundColor: colors.surface2, borderColor: colors.border, borderRadius: radii.md }]}>
               <Text style={{ color: colors.ink, fontWeight: '700', fontSize: 12.5, marginBottom: 6 }}>Try it — demo logins</Text>
               {DEMO_ACCOUNTS.map((d) => (
-                <TouchableOpacity key={d.email} style={styles.demoRow} onPress={() => fillDemo(d.email, d.password)}>
+                <TouchableOpacity key={d.email} activeOpacity={0.7} style={styles.demoRow} onPress={() => fillDemo(d.email, d.password)}>
                   <Text style={{ color: colors.inkDim, fontSize: 12.5, flexShrink: 1 }}>{d.label}</Text>
                   <Text style={{ color: colors.accent, fontSize: 12.5, fontWeight: '600' }}>tap to fill →</Text>
                 </TouchableOpacity>

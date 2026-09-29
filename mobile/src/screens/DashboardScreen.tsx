@@ -5,6 +5,7 @@ import { useAppData } from '../context/AppDataContext';
 import { Card, EmptyNote, ProgressBar, SectionTitle } from '../components/UI';
 import { Screen } from '../components/Screen';
 import { PayRow } from '../components/PayRow';
+import { DashboardSkeleton } from '../components/Skeleton';
 import { fmtMoney, milestoneState } from '../lib/format';
 import type { Currency } from '../types';
 
@@ -15,6 +16,7 @@ function CurrencyToggle({ value, onChange }: { value: Currency; onChange: (c: Cu
       {(['AED', 'INR'] as Currency[]).map((c) => (
         <TouchableOpacity
           key={c}
+          activeOpacity={0.7}
           onPress={() => onChange(c)}
           style={[styles.toggleBtn, value === c && { backgroundColor: colors.accent }]}
         >
@@ -61,6 +63,19 @@ export function DashboardScreen() {
     await refresh();
     setRefreshing(false);
   };
+
+  // First load (or a portfolio switch, which clears properties before refetching) — show
+  // the skeleton instead of an empty dashboard. A pull-to-refresh on already-loaded data
+  // keeps its own RefreshControl spinner and skips this.
+  if (loading && properties.length === 0 && !refreshing) {
+    return (
+      <Screen>
+        <ScrollView style={{ flex: 1 }}>
+          <DashboardSkeleton />
+        </ScrollView>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>

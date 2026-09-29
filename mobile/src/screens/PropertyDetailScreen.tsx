@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme } from '../theme/ThemeContext';
 import { useAppData } from '../context/AppDataContext';
 import { Card, EmptyNote, ProgressBar } from '../components/UI';
+import { PropertyDetailSkeleton } from '../components/Skeleton';
 import { Icon } from '../components/Icon';
 import { fmtDate, fmtMoney, fmtPct, fmtPsf, milestoneState, paidPct, resaleEligibility, STATE_LABEL } from '../lib/format';
 import type { PropertiesStackParamList } from '../navigation/types';
@@ -185,10 +186,20 @@ function daysUntilSafe(m: PaymentMilestone): number {
 
 export function PropertyDetailScreen({ route }: Props) {
   const { colors, radii } = useTheme();
-  const { properties, milestones, currency, fxRate } = useAppData();
+  const { properties, milestones, currency, fxRate, loading } = useAppData();
   const property = properties.find((p) => p.id === route.params.propertyId);
 
   if (!property) {
+    // A portfolio switch clears `properties` before refetching, so a property that's
+    // genuinely still loading looks identical to a missing one for a moment — show the
+    // skeleton in that case rather than flashing "not found" at the person.
+    if (loading) {
+      return (
+        <ScrollView style={{ flex: 1, backgroundColor: colors.bg }}>
+          <PropertyDetailSkeleton />
+        </ScrollView>
+      );
+    }
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg }}>
         <EmptyNote>Property not found.</EmptyNote>

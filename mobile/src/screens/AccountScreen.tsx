@@ -33,6 +33,7 @@ export function AccountScreen() {
             {(['light', 'dark'] as ThemeMode[]).map((m) => (
               <TouchableOpacity
                 key={m}
+                activeOpacity={0.7}
                 onPress={() => setMode(m)}
                 style={[styles.toggleBtn, mode === m && { backgroundColor: colors.accent }]}
               >
@@ -62,6 +63,7 @@ export function AccountScreen() {
       </Card>
 
       <TouchableOpacity
+        activeOpacity={0.7}
         onPress={logout}
         style={[styles.logoutBtn, { borderColor: colors.border, borderRadius: radii.sm }]}
       >

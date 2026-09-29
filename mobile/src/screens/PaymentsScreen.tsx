@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { useAppData } from '../context/AppDataContext';
 import { Icon } from '../components/Icon';
 import { Card, EmptyNote } from '../components/UI';
 import { Screen } from '../components/Screen';
 import { PayRow } from '../components/PayRow';
+import { PayListSkeleton } from '../components/Skeleton';
 import { milestoneState } from '../lib/format';
 import type { MilestoneState } from '../types';
 
@@ -25,10 +26,28 @@ const PAY_TABS: TabDef[] = [
 
 export function PaymentsScreen() {
   const { colors, radii } = useTheme();
-  const { properties, milestones, currency, fxRate } = useAppData();
+  const { properties, milestones, currency, fxRate, loading, refresh } = useAppData();
   const [activeTab, setActiveTab] = useState<MilestoneState>('soon');
   const [period, setPeriod] = useState<string>('all');
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refresh();
+    setRefreshing(false);
+  };
+
+  if (loading && milestones.length === 0 && properties.length === 0 && !refreshing) {
+    return (
+      <Screen>
+        <ScrollView contentContainerStyle={styles.content}>
+          <Text style={[styles.header, { color: colors.inkFaint }]}>PAYMENTS</Text>
+          <PayListSkeleton count={5} />
+        </ScrollView>
+      </Screen>
+    );
+  }
 
   const years = useMemo(() => {
     const set = new Set<number>();
@@ -64,7 +83,10 @@ export function PaymentsScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
+      >
         <Text style={[styles.header, { color: colors.inkFaint }]}>PAYMENTS</Text>
 
         <View style={styles.toolbar}>
@@ -74,6 +96,7 @@ export function PaymentsScreen() {
               return (
                 <TouchableOpacity
                   key={t.id}
+                  activeOpacity={0.7}
                   onPress={() => setActiveTab(t.id)}
                   style={[
                     styles.tabBtn,
@@ -97,6 +120,7 @@ export function PaymentsScreen() {
           </ScrollView>
 
           <TouchableOpacity
+            activeOpacity={0.7}
             onPress={() => setPickerOpen(true)}
             style={[styles.periodBtn, { backgroundColor: colors.surface2, borderColor: colors.border, borderRadius: radii.sm }]}
           >
@@ -130,6 +154,7 @@ export function PaymentsScreen() {
           <View style={[styles.modalSheet, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radii.lg }]}>
             <Text style={{ color: colors.ink, fontWeight: '700', fontSize: 14, marginBottom: 10 }}>Period</Text>
             <TouchableOpacity
+              activeOpacity={0.7}
               style={[styles.modalOption, period === 'all' && { backgroundColor: colors.accentSoft, borderRadius: radii.sm }]}
               onPress={() => {
                 setPeriod('all');
@@ -141,6 +166,7 @@ export function PaymentsScreen() {
             {years.map((y) => (
               <TouchableOpacity
                 key={y}
+                activeOpacity={0.7}
                 style={[styles.modalOption, String(y) === period && { backgroundColor: colors.accentSoft, borderRadius: radii.sm }]}
                 onPress={() => {
                   setPeriod(String(y));

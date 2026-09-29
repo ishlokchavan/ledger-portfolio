@@ -38,24 +38,29 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [loginError, setLoginError] = useState('');
 
   const loadPortfolioData = useCallback(async (portfolioId: string | null) => {
-    if (!portfolioId) {
-      setProperties([]);
-      setMilestones([]);
-      return;
-    }
-    const propRes = await supabase
-      .from('properties')
-      .select('*')
-      .eq('portfolio_id', portfolioId)
-      .order('purchase_date');
-    const props = (propRes.data as Property[]) || [];
-    setProperties(props);
-    const ids = props.map((p) => p.id);
-    if (ids.length) {
-      const msRes = await supabase.from('payment_milestones').select('*').in('property_id', ids).order('due_date');
-      setMilestones((msRes.data as PaymentMilestone[]) || []);
-    } else {
-      setMilestones([]);
+    setLoading(true);
+    try {
+      if (!portfolioId) {
+        setProperties([]);
+        setMilestones([]);
+        return;
+      }
+      const propRes = await supabase
+        .from('properties')
+        .select('*')
+        .eq('portfolio_id', portfolioId)
+        .order('purchase_date');
+      const props = (propRes.data as Property[]) || [];
+      setProperties(props);
+      const ids = props.map((p) => p.id);
+      if (ids.length) {
+        const msRes = await supabase.from('payment_milestones').select('*').in('property_id', ids).order('due_date');
+        setMilestones((msRes.data as PaymentMilestone[]) || []);
+      } else {
+        setMilestones([]);
+      }
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -82,6 +87,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         const fxRes = await supabase.from('fx_rates').select('*').eq('id', 1).single();
         if (fxRes.data) setFxRate((fxRes.data as FxRate).aed_to_inr);
 
+        // loadPortfolioData toggles `loading` itself; it's already true here so this just
+        // keeps it true through the handoff — no flash of `loading=false` in between.
         await loadPortfolioData(pid);
       } finally {
         setLoading(false);
@@ -97,8 +104,14 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       if (!mounted) return;
       const sess = data.session ?? null;
       setSession(sess);
-      if (sess) await loadEverything(sess);
+      // Flip booting off as soon as we know whether there's a session — the tab UI (with
+      // its own skeletons) renders immediately rather than sitting behind a blank spinner
+      // for however long the data fetch below takes.
       setBooting(false);
+      if (sess) {
+        setLoading(true);
+        loadEverything(sess);
+      }
     })();
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
       setSession(sess);
@@ -141,6 +154,11 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const switchPortfolio = useCallback(
     (id: string) => {
       setCurrentPortfolioId(id);
+      // Clear the previous portfolio's data immediately so screens fall into their
+      // "loading, no data yet" skeleton state right away instead of showing the old
+      // portfolio's properties/milestones while the new ones are still in flight.
+      setProperties([]);
+      setMilestones([]);
       loadPortfolioData(id);
     },
     [loadPortfolioData]
