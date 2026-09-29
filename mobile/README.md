@@ -88,3 +88,28 @@ Same Supabase project as the web app:
 
 - Investor (Shukla Family): `shukla.family.demo@example.com` / `ShuklaPortfolio#2026!`
 - Agency admin (all clients): `ishlokchavan@gmail.com` / `Portfolio#Admin2026!`
+
+## Getting it onto your iPhone via TestFlight (no laptop needed afterwards)
+
+Expo Go needs a laptop running the dev server. A TestFlight build is a real, standalone
+app that lives on your phone. One-time setup, from a computer:
+
+1. Enrol in the [Apple Developer Program](https://developer.apple.com/programs/) (paid, yearly).
+2. In App Store Connect, create an app record whose Bundle ID matches `ios.bundleIdentifier`
+   in `app.json` (`com.ledgerportfolio.app` — bundle IDs are globally unique, so change it
+   here first if Apple says it is taken).
+3. From `mobile/`:
+   ```bash
+   npm install -g eas-cli
+   eas login                 # Expo account (free)
+   eas build:configure       # first time only
+   npm run build:ios         # cloud build; asks for your Apple login/2FA and creates signing certs
+   npm run submit:ios        # uploads the finished build to App Store Connect / TestFlight
+   ```
+4. In App Store Connect → TestFlight, add yourself as an internal tester, then install the
+   **TestFlight** app on your iPhone and accept the invite. The first build takes Apple a
+   few minutes to process.
+
+Every later update is `npm run build:ios && npm run submit:ios` again (build numbers
+auto-increment). The web app needs none of this — it deploys from `main` on Vercel and can
+be added to an iPhone home screen from Safari (Share → Add to Home Screen).
