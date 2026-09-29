@@ -16,6 +16,17 @@ switch between all clients.
   Security enforcing per-investor data isolation at the database level, shared by
   both frontends.
 
+## UX at a glance
+
+Both apps share one design language (teal accent, Fraunces / Inter / IBM Plex Mono on web,
+same tokens on native): Overview with a progress hero, next-payment spotlight and
+needs-attention feed; Properties with search, filters and sorting; Payments with
+per-status totals, search and month grouping; light / dark / auto themes; AED / INR
+switching from the top bar. The web app additionally has a desktop sidebar layout, hash
+routes (deep links + back button), a 12-month payment forecast, a command palette
+(`Ctrl/Cmd+K`), keyboard shortcuts (`g o`, `g p`, `g y`, `h`, `c`), a "hide amounts"
+privacy mode, and CSV export of payments.
+
 ## Deploying changes
 
 **Web**: push to `main` — Vercel's GitHub integration builds and deploys

@@ -86,6 +86,8 @@ export type MilestoneState = 'paid' | 'overdue' | 'soon' | 'upcoming' | 'undecid
 
 export type Currency = 'AED' | 'INR';
 export type ThemeMode = 'light' | 'dark';
+/** What the user picked; 'system' resolves to light/dark from the device. */
+export type ThemePreference = ThemeMode | 'system';
 
 export interface ResaleEligibility {
   applicable: boolean;

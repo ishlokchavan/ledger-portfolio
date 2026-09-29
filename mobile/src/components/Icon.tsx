@@ -21,6 +21,17 @@ const ICONS: Record<string, string> = {
   properties: 'M4 21V9l8-6 8 6v12h-6v-7h-4v7H4Z',
   payments: 'M3 10h18M6 6h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z',
   account: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0',
+  search: 'M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm10 18-4.3-4.3',
+  clock: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 4.5V12l3 2',
+  alert: 'M12 3 2 20h20L12 3Zm0 6v5m0 3v.01',
+  sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  moon: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z',
+  monitor: 'M3 5h18v11H3zM8 21h8M12 16v5',
+  arrowRight: 'M5 12h14m-6-6 6 6-6 6',
+  chevronRight: 'M9 6l6 6-6 6',
+  x: 'M6 6l12 12M18 6 6 18',
+  users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm13 10v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
+  lock: 'M6 11V8a6 6 0 1 1 12 0v3M5 11h14v10H5z',
 };
 
 interface IconProps {

@@ -4,10 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { useAppData } from '../context/AppDataContext';
 import { Icon } from './Icon';
+import { Segmented } from './UI';
 
 export function TopBar() {
   const { colors, radii } = useTheme();
-  const { profile, portfolios, currentPortfolioId, setCurrentPortfolioId } = useAppData();
+  const { profile, portfolios, currentPortfolioId, setCurrentPortfolioId, currency, setCurrency } = useAppData();
   const [open, setOpen] = useState(false);
 
   const portfolio = portfolios.find((p) => p.id === currentPortfolioId);
@@ -23,23 +24,32 @@ export function TopBar() {
           <Text style={{ color: colors.ink, fontWeight: '700', fontSize: 16 }}>Ledger</Text>
         </View>
 
-        {canSwitch ? (
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setOpen(true)}
-            style={[styles.switchBtn, { borderColor: colors.border, backgroundColor: colors.surface2, borderRadius: radii.sm }]}
-          >
-            <Text style={{ color: colors.ink, fontSize: 12.5, fontWeight: '700' }} numberOfLines={1}>
-              {portfolio?.name ?? 'Select client'}
-            </Text>
-            <Icon name="chevron" size={13} color={colors.inkFaint} />
-          </TouchableOpacity>
-        ) : portfolio ? (
-          <Text style={{ color: colors.inkDim, fontSize: 13, fontWeight: '700' }} numberOfLines={1}>
-            {portfolio.name}
-          </Text>
-        ) : null}
+        <Segmented
+          accent
+          value={currency}
+          onChange={setCurrency}
+          options={[
+            { id: 'AED', label: 'AED' },
+            { id: 'INR', label: 'INR' },
+          ]}
+        />
       </View>
+
+      {canSwitch && (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => setOpen(true)}
+          accessibilityLabel="Switch client"
+          style={[styles.clientStrip, { backgroundColor: colors.accentSoft, borderRadius: radii.md }]}
+        >
+          <Icon name="users" size={16} color={colors.accent} />
+          <Text style={{ color: colors.accent, fontSize: 12.5, fontWeight: '600' }}>Client</Text>
+          <Text style={{ color: colors.accent, fontSize: 13.5, fontWeight: '700', flex: 1 }} numberOfLines={1}>
+            {portfolio?.name ?? 'Select client'}
+          </Text>
+          <Icon name="chevron" size={14} color={colors.accent} />
+        </TouchableOpacity>
+      )}
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
@@ -69,7 +79,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   mark: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
-  switchBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1, maxWidth: 170, minHeight: 38, justifyContent: 'center' },
+  clientStrip: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginBottom: 10, paddingHorizontal: 12, minHeight: 40 },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   sheet: { padding: 16, paddingBottom: 32, borderWidth: 1, maxHeight: '60%' },
   option: { paddingVertical: 12, paddingHorizontal: 10 },
