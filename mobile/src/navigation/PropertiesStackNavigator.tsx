@@ -23,7 +23,7 @@ export function PropertiesStackNavigator() {
       <Stack.Screen
         name="PropertyDetail"
         component={PropertyDetailScreen}
-        options={{ title: 'Property', headerBackTitle: 'Properties' }}
+        options={{ title: '', headerBackTitle: 'Properties', headerShadowVisible: false, headerStyle: { backgroundColor: colors.bg } }}
       />
     </Stack.Navigator>
   );

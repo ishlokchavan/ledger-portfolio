@@ -22,7 +22,7 @@ const ThemeCtx = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const system = useColorScheme();
-  const [preference, setPreferenceState] = useState<ThemePreference>('system');
+  const [preference, setPreferenceState] = useState<ThemePreference>('light');
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         const saved = await AsyncStorage.getItem(STORAGE_KEY);
         if (saved === 'dark' || saved === 'light' || saved === 'system') setPreferenceState(saved);
       } catch {
-        // ignore — fall back to following the device
+        // ignore — fall back to light
       } finally {
         setReady(true);
       }

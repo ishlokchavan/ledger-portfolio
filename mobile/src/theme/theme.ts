@@ -27,15 +27,15 @@ export interface ThemeColors {
 
 // Ported from index.html's CSS custom properties (:root and [data-theme="dark"]).
 export const lightColors: ThemeColors = {
-  bg: '#f4f6f5',
+  bg: '#f7f7f5',
   surface: '#ffffff',
-  surface2: '#eef1ef',
-  surface3: '#e4e9e6',
-  border: '#dde2df',
-  borderStrong: '#c8d0cc',
-  ink: '#101816',
-  inkDim: '#55635f',
-  inkFaint: '#86928f',
+  surface2: '#f2f2ef',
+  surface3: '#e8e8e4',
+  border: '#e6e6e2',
+  borderStrong: '#d3d3ce',
+  ink: '#131816',
+  inkDim: '#5a625f',
+  inkFaint: '#8a918e',
   accent: '#0f7d72',
   accentInk: '#ffffff',
   accentSoft: '#e0f1ee',
@@ -47,8 +47,8 @@ export const lightColors: ThemeColors = {
   badSoft: '#fbe8e5',
   info: '#3b6fb6',
   infoSoft: '#e6eefa',
-  heroA: '#0b3d38',
-  heroB: '#0a1f24',
+  heroA: '#1a2321',
+  heroB: '#111716',
 };
 
 export const darkColors: ThemeColors = {
@@ -72,8 +72,8 @@ export const darkColors: ThemeColors = {
   badSoft: '#2d1512',
   info: '#7aa7e6',
   infoSoft: '#12213a',
-  heroA: '#0d4a43',
-  heroB: '#07161a',
+  heroA: '#1b2724',
+  heroB: '#111a18',
 };
 
 export function colorsFor(mode: ThemeMode): ThemeColors {

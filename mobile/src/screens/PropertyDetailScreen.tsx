@@ -1,36 +1,32 @@
-import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Svg, { Circle, G, Line, Path, Text as SvgText } from 'react-native-svg';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme } from '../theme/ThemeContext';
 import { useAppData } from '../context/AppDataContext';
-import { Card, EmptyNote, ProgressBar } from '../components/UI';
+import { Card, EmptyNote, Pill, ProgressBar, Segmented } from '../components/UI';
 import { PropertyDetailSkeleton } from '../components/Skeleton';
 import { Icon } from '../components/Icon';
-import { fmtDate, fmtMoney, fmtPct, fmtPsf, milestoneState, paidPct, resaleEligibility, STATE_LABEL } from '../lib/format';
+import {
+  daysUntil,
+  fmtCompact,
+  fmtDate,
+  fmtMoney,
+  fmtPct,
+  fmtPsf,
+  initials,
+  milestoneState,
+  nextMilestone,
+  paidPct,
+  plural,
+  relDays,
+  resaleEligibility,
+  STATE_LABEL,
+} from '../lib/format';
 import type { PropertiesStackParamList } from '../navigation/types';
-import type { PaymentMilestone } from '../types';
+import type { MilestoneState, PaymentMilestone, Property } from '../types';
 
 type Props = NativeStackScreenProps<PropertiesStackParamList, 'PropertyDetail'>;
-
-function FactRow({ k, v }: { k: string; v: string }) {
-  const { colors } = useTheme();
-  return (
-    <View style={[styles.factRow, { borderColor: colors.border }]}>
-      <Text style={{ color: colors.inkDim, fontSize: 13, flexShrink: 1 }}>{k}</Text>
-      <Text style={{ color: colors.ink, fontSize: 13, fontWeight: '700', textAlign: 'right' }}>{v}</Text>
-    </View>
-  );
-}
-
-function SubHead({ icon, children }: { icon: React.ComponentProps<typeof Icon>['name']; children: string }) {
-  const { colors } = useTheme();
-  return (
-    <View style={styles.subheadRow}>
-      <Icon name={icon} size={12} color={colors.inkFaint} />
-      <Text style={[styles.subheadText, { color: colors.inkFaint }]}> {children}</Text>
-    </View>
-  );
-}
 
 const STATUS_COLOR_KEY: Record<string, 'good' | 'bad' | 'warn' | 'faint'> = {
   paid: 'good',
@@ -184,175 +180,640 @@ function daysUntilSafe(m: PaymentMilestone): number {
   return Math.round((dt.getTime() - today.getTime()) / 86400000);
 }
 
+type TabId = 'overview' | 'schedule' | 'financials' | 'details';
+const parse = (d: string | null | undefined) => (d ? new Date(d + 'T00:00:00') : null);
+const monthYear = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+const byDueDate = (a: PaymentMilestone, b: PaymentMilestone) =>
+  new Date(a.due_date || '2099-01-01').getTime() - new Date(b.due_date || '2099-01-01').getTime();
+const amt = (m: PaymentMilestone) => Number(m.amount_aed || 0);
+const sumOf = (l: PaymentMilestone[]) => l.reduce((a, m) => a + amt(m), 0);
+
+/** Cumulative-payments step chart: solid = paid, dashed = scheduled, with today/handover/NOC markers. */
+function JourneyChart({ property, milestones, resale }: { property: Property; milestones: PaymentMilestone[]; resale: ReturnType<typeof resaleEligibility> }) {
+  const { colors } = useTheme();
+  const [w, setW] = useState(0);
+  const dated = milestones.filter((m) => m.due_date).sort(byDueDate);
+  if (dated.length < 2) return null;
+
+  const H = 170, L = 34, R = 6, T = 22, B = 4;
+  const iw = Math.max(0, w - L - R), ih = H - T - B;
+  const denom = Math.max(Number(property.total_unit_price_aed || 0), sumOf(milestones)) || 1;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const first = parse(dated[0].due_date)!, last = parse(dated[dated.length - 1].due_date)!, ho = parse(property.handover_date);
+  let t0 = parse(property.purchase_date) || first;
+  if (t0 > first) t0 = first;
+  const t1 = new Date(Math.max(last.getTime(), ho ? ho.getTime() : 0, today.getTime()));
+  const span = t1.getTime() - t0.getTime() || 1;
+  const X = (d: Date) => L + Math.min(1, Math.max(0, (d.getTime() - t0.getTime()) / span)) * iw;
+  const Y = (v: number) => T + (1 - Math.min(1, v / denom)) * ih;
+
+  const paid = dated.filter((m) => m.status === 'Paid');
+  const open = dated.filter((m) => m.status !== 'Paid');
+  let cum = 0;
+  let act = `M${L},${Y(0)}`;
+  const dots: { x: number; y: number; kind: 'paid' | 'open' | 'late' }[] = [];
+  paid.forEach((m) => {
+    cum += amt(m);
+    const x = X(parse(m.due_date)!);
+    act += ` H${x} V${Y(cum)}`;
+    dots.push({ x, y: Y(cum), kind: 'paid' });
+  });
+  const xt = X(today);
+  act += ` H${xt}`;
+  const fill = `${act} V${Y(0)} Z`;
+  let proj = `M${xt},${Y(cum)}`;
+  open.forEach((m) => {
+    cum += amt(m);
+    const d = parse(m.due_date)!;
+    const x = Math.max(X(d), xt);
+    proj += ` H${x} V${Y(cum)}`;
+    dots.push({ x, y: Y(cum), kind: d < today ? 'late' : 'open' });
+  });
+  proj += ` H${L + iw}`;
+  const noc = resale.applicable && resale.reqPct ? Y(resale.reqPct * Number(property.total_unit_price_aed || 0)) : null;
+
+  return (
+    <View onLayout={(e) => setW(e.nativeEvent.layout.width)}>
+      {w > 0 && (
+        <Svg width={w} height={H}>
+          {[0, 50, 100].map((v) => (
+            <G key={v}>
+              <Line x1={L} x2={L + iw} y1={Y((v / 100) * denom)} y2={Y((v / 100) * denom)} stroke={colors.border} strokeWidth={1} />
+              <SvgText x={L - 6} y={Y((v / 100) * denom) + 3.5} fontSize={10} fontWeight="600" fill={colors.inkFaint} textAnchor="end">{`${v}%`}</SvgText>
+            </G>
+          ))}
+          {noc != null && (
+            <G>
+              <Line x1={L} x2={L + iw} y1={noc} y2={noc} stroke={colors.good} strokeWidth={1.5} strokeDasharray="4 4" />
+              <SvgText x={L + iw} y={noc - 5} fontSize={10} fontWeight="700" fill={colors.good} textAnchor="end">{`Resale NOC ${Math.round((resale.reqPct || 0) * 100)}%`}</SvgText>
+            </G>
+          )}
+          <Path d={fill} fill={colors.accentSoft} />
+          <Path d={proj} fill="none" stroke={colors.inkFaint} strokeWidth={2} strokeDasharray="5 4" />
+          <Path d={act} fill="none" stroke={colors.accent} strokeWidth={2.5} strokeLinejoin="round" />
+          {ho && ho >= t0 && ho <= t1 && (
+            <G>
+              <Line x1={X(ho)} x2={X(ho)} y1={T - 4} y2={T + ih} stroke={colors.info} strokeWidth={1.5} strokeDasharray="3 3" />
+              <SvgText x={X(ho)} y={11} fontSize={10} fontWeight="700" fill={colors.info} textAnchor="end">Handover</SvgText>
+            </G>
+          )}
+          <Line x1={xt} x2={xt} y1={T - 4} y2={T + ih} stroke={colors.ink} strokeWidth={1.5} />
+          <SvgText x={xt} y={11} fontSize={10} fontWeight="700" fill={colors.ink} textAnchor="middle">Today</SvgText>
+          {dots.map((d, i) => (
+            <Circle
+              key={i}
+              cx={d.x}
+              cy={d.y}
+              r={4.5}
+              fill={d.kind === 'paid' ? colors.accent : d.kind === 'late' ? colors.bad : colors.surface}
+              stroke={d.kind === 'paid' ? colors.accent : d.kind === 'late' ? colors.bad : colors.inkFaint}
+              strokeWidth={2}
+            />
+          ))}
+        </Svg>
+      )}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: L, marginTop: 6 }}>
+        <Text style={{ color: colors.inkFaint, fontSize: 11, fontWeight: '600' }}>{monthYear(t0)}</Text>
+        <Text style={{ color: colors.inkFaint, fontSize: 11, fontWeight: '600' }}>{monthYear(t1)}</Text>
+      </View>
+    </View>
+  );
+}
+
+function SectionCard({ title, icon, children }: { title: string; icon: React.ComponentProps<typeof Icon>['name']; children: React.ReactNode }) {
+  const { colors } = useTheme();
+  return (
+    <Card style={{ padding: 0, marginBottom: 14 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 18, paddingTop: 16, paddingBottom: 4 }}>
+        <Icon name={icon} size={14} color={colors.inkFaint} />
+        <Text style={{ color: colors.inkFaint, fontSize: 11.5, fontWeight: '700', letterSpacing: 0.7, textTransform: 'uppercase' }}>{title}</Text>
+      </View>
+      <View style={{ paddingHorizontal: 18, paddingBottom: 14 }}>{children}</View>
+    </Card>
+  );
+}
+
 export function PropertyDetailScreen({ route }: Props) {
   const { colors, radii } = useTheme();
   const { properties, milestones, currency, fxRate, loading } = useAppData();
+  const [tab, setTab] = useState<TabId>('overview');
+  const [view, setView] = useState<'grouped' | 'table'>('grouped');
+
   const property = properties.find((p) => p.id === route.params.propertyId);
+  const ms = useMemo(
+    () => milestones.filter((m) => m.property_id === route.params.propertyId).sort((a, b) => (a.milestone_no || 0) - (b.milestone_no || 0)),
+    [milestones, route.params.propertyId]
+  );
 
   if (!property) {
-    // A portfolio switch clears `properties` before refetching, so a property that's
-    // genuinely still loading looks identical to a missing one for a moment — show the
-    // skeleton in that case rather than flashing "not found" at the person.
     if (loading) {
       return (
-        <ScrollView style={{ flex: 1, backgroundColor: colors.bg }}>
+        <ScrollView style={{ backgroundColor: colors.bg }}>
           <PropertyDetailSkeleton />
         </ScrollView>
       );
     }
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <View style={{ flex: 1, backgroundColor: colors.bg, padding: 24 }}>
         <EmptyNote>Property not found.</EmptyNote>
       </View>
     );
   }
 
-  const ms = milestones
-    .filter((m) => m.property_id === property.id)
-    .slice()
-    .sort((a, b) => (a.milestone_no || 0) - (b.milestone_no || 0));
-
+  const money = (v: number | null | undefined) => fmtMoney(v, currency, fxRate);
+  const compact = (v: number | null | undefined) => fmtCompact(v, currency, fxRate);
   const pct = paidPct(property);
   const resale = resaleEligibility(property);
+  const buckets: Record<MilestoneState, PaymentMilestone[]> = { overdue: [], soon: [], upcoming: [], undecided: [], paid: [] };
+  ms.forEach((m) => buckets[milestoneState(m)].push(m));
+  const next = nextMilestone(ms, property.id);
+  const nextState = next ? milestoneState(next) : null;
+  const nd = next ? daysUntil(next.due_date) : null;
+  const hoDays = daysUntil(property.handover_date);
+  const paidAmt = Number(property.total_paid_aed || 0);
+  const pendAmt = Number(property.total_pending_aed || 0);
 
-  const pricingFacts: [string, string][] = [];
-  if (property.unit_price_aed && Number(property.unit_price_aed) !== Number(property.total_unit_price_aed)) {
-    pricingFacts.push(['Base price', fmtMoney(property.unit_price_aed, currency, fxRate)]);
+  // Reconcile the segmented bar with the headline paid / remaining numbers.
+  const openStates: [MilestoneState, string, string][] = [
+    ['overdue', 'Overdue', colors.bad],
+    ['soon', 'Due in 30 days', colors.warn],
+    ['upcoming', 'Upcoming', colors.surface3],
+    ['undecided', 'Date TBC', colors.borderStrong],
+  ];
+  const openRaw = openStates.reduce((a, [k]) => a + sumOf(buckets[k]), 0);
+  const scale = openRaw > 0 ? pendAmt / openRaw : 0;
+  const segs: { label: string; color: string; amt: number }[] = [{ label: 'Paid', color: colors.accent, amt: paidAmt }];
+  if (openRaw > 0) openStates.forEach(([k, label, color]) => buckets[k].length && segs.push({ label, color, amt: sumOf(buckets[k]) * scale }));
+  else if (pendAmt > 0) segs.push({ label: 'Remaining', color: colors.surface3, amt: pendAmt });
+  const segList = segs.filter((s) => s.amt > 0);
+  const segTotal = segList.reduce((a, s) => a + s.amt, 0);
+
+  // Resale forecast: first future milestone at which cumulative paid crosses the NOC threshold.
+  let forecast: { date: string; event: string } | null = null;
+  if (resale.applicable && !resale.eligible) {
+    const need = (resale.reqPct || 0) * Number(property.total_unit_price_aed || 0);
+    let acc = paidAmt;
+    for (const m of ms.filter((x) => x.status !== 'Paid' && x.due_date).sort(byDueDate)) {
+      acc += amt(m);
+      if (acc >= need) {
+        forecast = { date: m.due_date!, event: m.milestone_event };
+        break;
+      }
+    }
   }
-  pricingFacts.push(['Total unit price', fmtMoney(property.total_unit_price_aed, currency, fxRate)]);
-  const psfBua = fmtPsf(property.ppsf_bua);
-  if (psfBua) pricingFacts.push(['Price per sqft (BUA)', psfBua]);
-  const psfPlot = fmtPsf(property.ppsf_plot);
-  if (psfPlot) pricingFacts.push(['Price per sqft (Plot)', psfPlot]);
+  const needMore = Math.max(0, (resale.reqPct || 0) * Number(property.total_unit_price_aed || 0) - paidAmt);
 
-  const equityPhases: [string, number | null, number | null][] = [
-    ['During construction', property.equity_construction_pct, property.equity_construction_aed],
-    ['On handover', property.equity_handover_pct, property.equity_handover_aed],
-    ['Post-handover', property.equity_posthandover_pct, property.equity_posthandover_aed],
-  ].filter((row) => row[1] != null && Number(row[1]) > 0) as [string, number, number][];
+  const cumShare = (() => {
+    const total = sumOf(ms) || 1;
+    let acc = 0;
+    const out: Record<string, number> = {};
+    ms.forEach((m) => {
+      acc += amt(m);
+      out[m.id] = acc / total;
+    });
+    return out;
+  })();
 
-  const hasAccelerated = property.accelerated_payment_aed != null && Number(property.accelerated_payment_aed) > 0;
+  const onShare = () => {
+    const lines = [
+      `${property.project_name} — ${property.developer || ''}${property.location ? ` (${property.location})` : ''}`,
+      `Price ${money(property.total_unit_price_aed)} · Paid ${pct}% (${money(paidAmt)}) · Remaining ${money(pendAmt)}`,
+    ];
+    if (next) lines.push(`Next payment: ${next.milestone_event} — ${fmtDate(next.due_date)} (${money(amt(next))})`);
+    if (property.handover_date) lines.push(`Handover: ${fmtDate(property.handover_date)}`);
+    Share.share({ message: lines.join('\n') }).catch(() => {});
+  };
 
-  const owners: [string, number | null][] = [];
-  if (property.owner1_name) owners.push([property.owner1_name, property.owner1_pct]);
-  if (property.owner2_name) owners.push([property.owner2_name, property.owner2_pct]);
+  const stateColor = (s: MilestoneState | null) => (s === 'overdue' ? colors.bad : s === 'soon' ? colors.warn : colors.ink);
+  const owners = [
+    [property.owner1_name, property.owner1_pct],
+    [property.owner2_name, property.owner2_pct],
+  ].filter((o) => o[0]) as [string, number | null][];
+
+  const TABS: [TabId, string, string?][] = [
+    ['overview', 'Overview'],
+    ['schedule', 'Schedule', `${buckets.paid.length}/${ms.length}`],
+    ['financials', 'Financials'],
+    ['details', 'Details'],
+  ];
+
+  const Stat = ({ k, v, s, color }: { k: string; v: string; s: string; color?: string }) => (
+    <View style={{ width: '50%', paddingVertical: 12, paddingHorizontal: 4 }}>
+      <Text style={{ color: colors.inkFaint, fontSize: 11.5, fontWeight: '600' }}>{k}</Text>
+      <Text style={{ color: color ?? colors.ink, fontSize: 17, fontWeight: '700', marginTop: 4 }} numberOfLines={1}>{v}</Text>
+      <Text style={{ color: colors.inkDim, fontSize: 12, marginTop: 2 }} numberOfLines={1}>{s}</Text>
+    </View>
+  );
+
+  const ScheduleRow = ({ m }: { m: PaymentMilestone }) => {
+    const st = milestoneState(m);
+    const d = daysUntil(m.due_date);
+    const dt = parse(m.due_date);
+    const isNext = next?.id === m.id;
+    const cum = Math.round((cumShare[m.id] || 0) * 100);
+    const tag = st === 'overdue' ? `${Math.abs(d ?? 0)}d overdue` : st === 'soon' || isNext ? relDays(d) : '';
+    return (
+      <View style={[styles2.mrow, { borderColor: colors.border, backgroundColor: isNext ? colors.accentSoft : 'transparent' }]}>
+        <View style={{ width: 46, alignItems: 'center' }}>
+          {st === 'paid' ? (
+            <Icon name="check" size={20} color={colors.good} />
+          ) : (
+            <Text style={{ color: dt ? colors.ink : colors.inkFaint, fontSize: 18, fontWeight: '700' }}>{dt ? dt.getDate() : '—'}</Text>
+          )}
+          <Text style={{ color: colors.inkFaint, fontSize: 9.5, fontWeight: '700', textTransform: 'uppercase', marginTop: 3 }}>
+            {st === 'paid' ? 'paid' : dt ? dt.toLocaleDateString('en-US', { month: 'short' }) + ' ' + String(dt.getFullYear()).slice(2) : 'TBC'}
+          </Text>
+        </View>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={{ color: st === 'paid' ? colors.inkDim : colors.ink, fontSize: 14, fontWeight: '600' }}>{m.milestone_event}</Text>
+          <Text style={{ color: colors.inkDim, fontSize: 12, marginTop: 3 }}>
+            {tag ? <Text style={{ color: st === 'overdue' ? colors.bad : st === 'soon' ? colors.warn : colors.accent, fontWeight: '700' }}>{tag} · </Text> : null}
+            {m.pct != null ? `${fmtPct(m.pct)} of price · ` : ''}
+            {cum}% cumulative
+          </Text>
+        </View>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={{ color: colors.ink, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] }}>{money(m.amount_aed)}</Text>
+          <Text style={{ color: colors.inkFaint, fontSize: 11.5 }}>+ VAT {compact(m.vat_aed)}</Text>
+        </View>
+      </View>
+    );
+  };
+
+  const kv = (rows: [string, string, boolean?][]) =>
+    rows.map(([k, v, strong], i) => (
+      <View key={k} style={[styles2.kv, i > 0 && { borderTopWidth: 1, borderColor: colors.border }]}>
+        <Text style={{ color: strong ? colors.ink : colors.inkDim, fontSize: 13.5, fontWeight: strong ? '700' : '400', flexShrink: 1 }}>{k}</Text>
+        <Text style={{ color: colors.ink, fontSize: 13.5, fontWeight: strong ? '700' : '600', textAlign: 'right' }}>{v}</Text>
+      </View>
+    ));
+
+  const totals = ms.reduce(
+    (a, m) => ({
+      amount: a.amount + Number(m.amount_aed || 0),
+      vat: a.vat + Number(m.vat_aed || 0),
+      total: a.total + Number(m.total_aed || 0),
+      paid: a.paid + Number(m.paid_aed || 0),
+      out: a.out + Number(m.outstanding_aed || 0),
+    }),
+    { amount: 0, vat: 0, total: 0, paid: 0, out: 0 }
+  );
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} contentContainerStyle={styles.content}>
-      <Card>
-        <Text style={[styles.title, { color: colors.ink }]}>{property.project_name}</Text>
-        <Text style={{ color: colors.inkDim, fontSize: 13, marginTop: 3 }}>
-          {property.developer} · {property.location || ''} · Unit {property.unit_no || ''}
-        </Text>
-
-        <View style={styles.progressRow}>
-          <ProgressBar pct={pct} />
-          <Text style={{ color: colors.accent, fontWeight: '700', fontSize: 12, minWidth: 34, textAlign: 'right' }}>{pct}%</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} contentContainerStyle={{ padding: 16, paddingBottom: 56 }} stickyHeaderIndices={[2]}>
+      {/* 0 — header */}
+      <View>
+        <Text style={{ color: colors.ink, fontSize: 28, fontWeight: '800', letterSpacing: -0.6 }}>{property.project_name}</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4, marginTop: 8 }}>
+          <Icon name="developer" size={14} color={colors.inkFaint} />
+          <Text style={{ color: colors.inkDim, fontSize: 14 }}> {property.developer || '—'}   </Text>
+          <Icon name="location" size={14} color={colors.inkFaint} />
+          <Text style={{ color: colors.inkDim, fontSize: 14 }}> {property.location || '—'}</Text>
+          {property.unit_no ? <Text style={{ color: colors.inkDim, fontSize: 14 }}>   ·   Unit {property.unit_no}</Text> : null}
         </View>
-        <Text style={{ color: colors.inkFaint, fontSize: 12, marginTop: 5 }}>
-          {fmtMoney(property.total_paid_aed, currency, fxRate)} paid of {fmtMoney(property.total_unit_price_aed, currency, fxRate)} ·{' '}
-          {fmtMoney(property.total_pending_aed, currency, fxRate)} remaining
-        </Text>
-
-        <View style={styles.detailGrid}>
-          <DetailItem label="Type" value={`${property.unit_type || '—'}${property.bedrooms ? ` · ${Math.trunc(property.bedrooms)} BR` : ''}`} />
-          <DetailItem label="Size (BUA)" value={property.size_sqft ? `${Math.round(property.size_sqft).toLocaleString('en-US')} sqft` : '—'} />
-          {property.plot_sqft ? <DetailItem label="Plot" value={`${Math.round(property.plot_sqft).toLocaleString('en-US')} sqft`} /> : null}
-          <DetailItem label="Payment plan" value={property.payment_plan || '—'} />
-          <DetailItem label="Purchase date" value={fmtDate(property.purchase_date)} />
-          <DetailItem label="Handover" value={fmtDate(property.handover_date)} />
-          <DetailItem label="Status" value={property.status} />
-          <DetailItem label="Unit no." value={property.unit_no || '—'} />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
+          <Pill label={property.status || '—'} tone="neutral" />
+          {resale.eligible && <Pill label="Resale ready" tone="good" />}
+          {property.payment_plan ? <Pill label={`Plan ${property.payment_plan}`} tone="neutral" /> : null}
         </View>
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={onShare}
+            accessibilityRole="button"
+            style={[styles2.ghostBtn, { borderColor: colors.borderStrong, borderRadius: radii.md }]}
+          >
+            <Text style={{ color: colors.ink, fontSize: 13, fontWeight: '700' }}>Share summary</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
-        {owners.length > 0 && (
-          <View style={{ marginTop: 16 }}>
-            <Text style={[styles.kLabel, { color: colors.inkFaint }]}>OWNERSHIP</Text>
-            <View style={styles.ownerChipRow}>
-              {owners.map(([name, ownPct]) => (
-                <View key={name} style={[styles.ownerChip, { backgroundColor: colors.surface2, borderRadius: radii.pill }]}>
-                  <View style={[styles.ownerDot, { backgroundColor: colors.accent }]}>
-                    <Text style={{ color: colors.accentInk, fontSize: 10, fontWeight: '700' }}>{name[0]}</Text>
-                  </View>
-                  <Text style={{ color: colors.ink, fontSize: 12 }}>
-                    {name} · {Math.round((ownPct || 0) * 100)}%
+      {/* 1 — summary card */}
+      <Card style={{ padding: 20, marginTop: 16, marginBottom: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: colors.ink, fontSize: 30, fontWeight: '800', letterSpacing: -0.8 }} numberOfLines={1} adjustsFontSizeToFit>{money(paidAmt)}</Text>
+            <Text style={{ color: colors.inkDim, fontSize: 13.5, marginTop: 6 }}>paid of {money(property.total_unit_price_aed)}</Text>
+          </View>
+          <Pill label={`${pct}% paid`} tone="accent" />
+        </View>
+        {segTotal > 0 ? (
+          <>
+            <View style={{ flexDirection: 'row', gap: 3, height: 12, marginTop: 16, borderRadius: 99, overflow: 'hidden' }}>
+              {segList.map((s) => (
+                <View key={s.label} style={{ flex: Math.max(s.amt, segTotal * 0.01), backgroundColor: s.color }} />
+              ))}
+            </View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 6, marginTop: 12 }}>
+              {segList.map((s) => (
+                <View key={s.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={{ width: 9, height: 9, borderRadius: 3, backgroundColor: s.color }} />
+                  <Text style={{ color: colors.inkDim, fontSize: 12.5 }}>
+                    {s.label} <Text style={{ color: colors.ink, fontWeight: '700' }}>{compact(s.amt)}</Text>
                   </Text>
                 </View>
               ))}
             </View>
+          </>
+        ) : (
+          <View style={{ marginTop: 16 }}>
+            <ProgressBar pct={pct} height={12} />
           </View>
         )}
-
-        <SubHead icon="money">PRICING</SubHead>
-        <View>
-          {pricingFacts.map(([k, v]) => (
-            <FactRow key={k} k={k} v={v} />
-          ))}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 12, borderTopWidth: 1, borderColor: colors.border }}>
+          <Stat k="Remaining" v={compact(pendAmt)} s={`${plural(ms.length - buckets.paid.length, 'milestone')} left`} />
+          <Stat
+            k="Next payment"
+            v={next ? relDays(nd) : buckets.undecided.length ? 'Date TBC' : 'None'}
+            s={next ? `${compact(amt(next))} · ${fmtDate(next.due_date)}` : '—'}
+            color={stateColor(nextState)}
+          />
+          <Stat k="Handover" v={property.handover_date ? (hoDays !== null && hoDays >= 0 ? relDays(hoDays).replace('In ', '') : 'Handed over') : '—'} s={fmtDate(property.handover_date)} />
+          <Stat k="Resale" v={!resale.applicable ? 'Not allowed' : resale.eligible ? 'Eligible' : 'Not yet'} s={resale.applicable ? `NOC at ${fmtPct(resale.reqPct)} paid` : 'Per contract'} />
         </View>
-
-        {equityPhases.length > 0 && (
-          <>
-            <SubHead icon="percent">PAYMENT STRUCTURE</SubHead>
-            <View>
-              {equityPhases.map(([label, phasePct, phaseAed]) => (
-                <FactRow key={label} k={label} v={`${fmtPct(phasePct)} · ${fmtMoney(phaseAed, currency, fxRate)}`} />
-              ))}
-            </View>
-          </>
-        )}
-
-        {hasAccelerated && (
-          <>
-            <Text style={[styles.subheadTextPlain, { color: colors.inkFaint }]}>ACCELERATED PAYMENT</Text>
-            <FactRow k="Accelerated payment" v={`${fmtPct(property.accelerated_payment_pct)} · ${fmtMoney(property.accelerated_payment_aed, currency, fxRate)}`} />
-          </>
-        )}
-
-        <SubHead icon="resale">RESALE</SubHead>
-        <View
-          style={[
-            styles.readinessBox,
-            { borderColor: colors.border, backgroundColor: resale.eligible ? colors.goodSoft : colors.surface2, borderRadius: radii.md },
-            resale.eligible && { borderColor: 'transparent' },
-          ]}
-        >
-          <Text style={{ fontSize: 13.5, fontWeight: '700', color: resale.eligible ? colors.good : colors.ink }}>
-            {!resale.applicable ? 'Not resale-applicable' : resale.eligible ? 'Resale ready' : 'Not yet eligible to sell'}
-          </Text>
-          <Text style={{ fontSize: 12.5, color: resale.eligible ? colors.ink : colors.inkDim, marginTop: 5, lineHeight: 18 }}>
-            {!resale.applicable
-              ? "This unit's contract does not permit resale at this stage."
-              : resale.eligible
-              ? `${fmtPct(resale.paidPct)} paid, above the ${fmtPct(resale.reqPct)} required for a resale NOC.`
-              : `${fmtPct(resale.paidPct)} paid — needs ${fmtPct(resale.reqPct)} paid to qualify for a resale NOC.`}
-          </Text>
-        </View>
-
-        {property.offer_notes ? <DetailItem label="Offer / discount" value={property.offer_notes} style={{ marginTop: 16 }} /> : null}
-        {property.remarks ? <DetailItem label="Remarks" value={property.remarks} style={{ marginTop: 14 }} /> : null}
       </Card>
 
-      <Text style={[styles.header, { color: colors.inkFaint }]}>PAYMENT SCHEDULE ({ms.length} MILESTONES)</Text>
-      {ms.length ? (
-        <MilestoneTable milestones={ms} currency={currency} fxRate={fxRate} />
-      ) : (
-        <Card>
-          <EmptyNote>No milestones on file.</EmptyNote>
-        </Card>
-      )}
+      {/* 2 — sticky tab bar */}
+      <View style={{ backgroundColor: colors.bg, marginHorizontal: -16, paddingHorizontal: 16, borderBottomWidth: 1, borderColor: colors.border }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {TABS.map(([id, label, badge]) => {
+            const active = tab === id;
+            return (
+              <TouchableOpacity key={id} onPress={() => setTab(id)} accessibilityRole="tab" accessibilityState={{ selected: active }} style={styles2.tab}>
+                <Text style={{ color: active ? colors.ink : colors.inkDim, fontWeight: '700', fontSize: 14 }}>{label}</Text>
+                {badge ? (
+                  <View style={{ backgroundColor: colors.surface3, borderRadius: 99, paddingHorizontal: 7, paddingVertical: 1 }}>
+                    <Text style={{ color: colors.inkDim, fontSize: 11, fontWeight: '700' }}>{badge}</Text>
+                  </View>
+                ) : null}
+                {active && <View style={{ position: 'absolute', left: 8, right: 8, bottom: -1, height: 2.5, borderRadius: 2, backgroundColor: colors.ink }} />}
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* 3 — tab body */}
+      <View style={{ marginTop: 16 }}>
+        {tab === 'overview' && (
+          <>
+            <Card style={{ padding: 20, marginBottom: 14 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '700' }}>Next payment</Text>
+                {next && nd !== null && <Pill label={nextState === 'overdue' ? `${Math.abs(nd)} days overdue` : relDays(nd)} tone={nextState === 'overdue' ? 'bad' : nextState === 'soon' ? 'warn' : 'neutral'} />}
+              </View>
+              {next ? (
+                <>
+                  <Text style={{ color: colors.ink, fontSize: 17, fontWeight: '700', marginTop: 12 }}>{next.milestone_event}</Text>
+                  <Text style={{ color: colors.inkDim, fontSize: 13.5, marginTop: 4 }}>
+                    Due {fmtDate(next.due_date)}
+                    {next.pct != null ? ` · ${fmtPct(next.pct)} of price` : ''}
+                  </Text>
+                  <Text style={{ color: colors.ink, fontSize: 28, fontWeight: '800', letterSpacing: -0.6, marginTop: 14 }}>
+                    {money(amt(next))} <Text style={{ color: colors.inkDim, fontSize: 12.5, fontWeight: '500' }}>+ VAT {money(next.vat_aed)}</Text>
+                  </Text>
+                </>
+              ) : (
+                <Text style={{ color: colors.inkDim, fontSize: 14, marginTop: 12, lineHeight: 21 }}>
+                  {buckets.undecided.length
+                    ? `${plural(buckets.undecided.length, 'remaining milestone')} still waiting for a confirmed due date.`
+                    : 'Everything on this unit is paid. Nothing further is due.'}
+                </Text>
+              )}
+            </Card>
+
+            {dated(ms) && (
+              <SectionCard title="Payment journey" icon="money">
+                <Text style={{ color: colors.inkDim, fontSize: 12.5, marginBottom: 8 }}>Cumulative share of the price paid over time</Text>
+                <JourneyChart property={property} milestones={ms} resale={resale} />
+              </SectionCard>
+            )}
+
+            <SectionCard title="Resale readiness" icon="resale">
+              {!resale.applicable ? (
+                <Text style={{ color: colors.inkDim, fontSize: 13.5, lineHeight: 20, marginTop: 8 }}>This unit&apos;s contract does not allow resale at this stage.</Text>
+              ) : (
+                <>
+                  <View style={{ marginTop: 28 }}>
+                    <View style={{ height: 12, borderRadius: 99, backgroundColor: colors.surface3 }}>
+                      <View style={{ width: `${Math.min(100, (resale.paidPct || 0) * 100)}%`, height: '100%', borderRadius: 99, backgroundColor: colors.accent }} />
+                      <View style={{ position: 'absolute', left: `${Math.min(100, (resale.reqPct || 0) * 100)}%`, top: -6, bottom: -6, width: 2, backgroundColor: colors.ink }}>
+                        <Text style={{ position: 'absolute', top: -18, left: -28, width: 58, textAlign: 'center', color: colors.ink, fontSize: 10.5, fontWeight: '700' }}>
+                          {`NOC ${fmtPct(resale.reqPct)}`}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={{ color: colors.inkFaint, fontSize: 11, fontWeight: '600', marginTop: 8 }}>{fmtPct(resale.paidPct)} paid</Text>
+                  </View>
+                  <View style={[styles2.callout, { backgroundColor: resale.eligible ? colors.goodSoft : colors.surface2, borderRadius: radii.md }]}>
+                    <Text style={{ color: resale.eligible ? colors.good : colors.ink, fontSize: 14, fontWeight: '700' }}>{resale.eligible ? 'Resale ready' : 'Not yet eligible'}</Text>
+                    <Text style={{ color: colors.inkDim, fontSize: 13, lineHeight: 19, marginTop: 3 }}>
+                      {resale.eligible
+                        ? 'You can request a resale NOC today.'
+                        : forecast
+                          ? `On the current schedule you qualify after ${forecast.event} (${fmtDate(forecast.date)}). About ${money(needMore)} more to pay.`
+                          : `No dated milestone gets you there yet — some payments still need due dates. About ${money(needMore)} more to pay.`}
+                    </Text>
+                  </View>
+                </>
+              )}
+            </SectionCard>
+
+            {(property.offer_notes || property.remarks) && (
+              <SectionCard title="Notes" icon="filter">
+                {property.offer_notes ? (
+                  <Text style={styles2.note}>
+                    <Text style={{ color: colors.ink, fontWeight: '700' }}>Offer / discount{'\n'}</Text>
+                    <Text style={{ color: colors.inkDim }}>{property.offer_notes}</Text>
+                  </Text>
+                ) : null}
+                {property.remarks ? (
+                  <Text style={styles2.note}>
+                    <Text style={{ color: colors.ink, fontWeight: '700' }}>Remarks{'\n'}</Text>
+                    <Text style={{ color: colors.inkDim }}>{property.remarks}</Text>
+                  </Text>
+                ) : null}
+              </SectionCard>
+            )}
+          </>
+        )}
+
+        {tab === 'schedule' && (
+          <>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, gap: 10 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '700' }}>{buckets.paid.length} of {ms.length} milestones paid</Text>
+                <Text style={{ color: colors.inkDim, fontSize: 12.5, marginTop: 2 }}>{compact(paidAmt)} paid · {compact(pendAmt)} remaining</Text>
+              </View>
+              <Segmented value={view} onChange={setView} options={[{ id: 'grouped', label: 'Grouped' }, { id: 'table', label: 'Table' }]} />
+            </View>
+            {!ms.length ? (
+              <Card><EmptyNote>No milestones on file.</EmptyNote></Card>
+            ) : view === 'table' ? (
+              <MilestoneTable milestones={ms} currency={currency} fxRate={fxRate} />
+            ) : (
+              (
+                [
+                  ['overdue', 'Overdue', colors.bad],
+                  ['soon', 'Due in the next 30 days', colors.warn],
+                  ['upcoming', 'Later', colors.info],
+                  ['undecided', 'Date to be confirmed', colors.inkFaint],
+                  ['paid', 'Paid', colors.good],
+                ] as [MilestoneState, string, string][]
+              )
+                .filter(([k]) => buckets[k].length)
+                .map(([k, label, color]) => {
+                  const list = buckets[k].slice().sort(byDueDate);
+                  if (k === 'paid') list.reverse();
+                  return (
+                    <Card key={k} style={{ padding: 0, marginBottom: 14, overflow: 'hidden' }}>
+                      <View style={styles2.grpHead}>
+                        <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: color }} />
+                        <Text style={{ color: colors.ink, fontSize: 14, fontWeight: '700' }}>{label}</Text>
+                        <Text style={{ color: colors.inkFaint, fontSize: 12.5 }}>{list.length}</Text>
+                        <Text style={{ marginLeft: 'auto', color: colors.ink, fontSize: 13.5, fontWeight: '700' }}>{compact(sumOf(list))}</Text>
+                      </View>
+                      {list.map((m) => (
+                        <ScheduleRow key={m.id} m={m} />
+                      ))}
+                    </Card>
+                  );
+                })
+            )}
+          </>
+        )}
+
+        {tab === 'financials' && (
+          <>
+            <SectionCard title="Price" icon="money">
+              {kv(
+                [
+                  property.unit_price_aed && Number(property.unit_price_aed) !== Number(property.total_unit_price_aed) ? (['Base price', money(property.unit_price_aed)] as [string, string]) : null,
+                  ['Total unit price', money(property.total_unit_price_aed), true] as [string, string, boolean],
+                  fmtPsf(property.ppsf_bua) ? (['Price per sqft (BUA)', fmtPsf(property.ppsf_bua)!] as [string, string]) : null,
+                  fmtPsf(property.ppsf_plot) ? (['Price per sqft (plot)', fmtPsf(property.ppsf_plot)!] as [string, string]) : null,
+                  property.accelerated_payment_aed != null && Number(property.accelerated_payment_aed) > 0
+                    ? (['Accelerated payment', `${fmtPct(property.accelerated_payment_pct)} · ${money(property.accelerated_payment_aed)}`] as [string, string])
+                    : null,
+                ].filter(Boolean) as [string, string, boolean?][]
+              )}
+            </SectionCard>
+            {ms.length > 0 && (
+              <SectionCard title="Schedule totals" icon="payments">
+                {kv([
+                  ['Installments (ex-VAT)', money(totals.amount)],
+                  ['VAT', money(totals.vat)],
+                  ['Total payable', money(totals.total), true],
+                  ['Paid to date', money(totals.paid)],
+                  ['Outstanding', money(totals.out), true],
+                ])}
+              </SectionCard>
+            )}
+            {(() => {
+              const phases = [
+                ['During construction', property.equity_construction_pct, property.equity_construction_aed, colors.accent],
+                ['On handover', property.equity_handover_pct, property.equity_handover_aed, colors.info],
+                ['Post-handover', property.equity_posthandover_pct, property.equity_posthandover_aed, colors.warn],
+              ].filter((r) => r[1] != null && Number(r[1]) > 0) as [string, number, number | null, string][];
+              if (!phases.length) return null;
+              return (
+                <SectionCard title="Payment structure" icon="percent">
+                  <View style={{ flexDirection: 'row', height: 12, borderRadius: 99, overflow: 'hidden', gap: 2, marginTop: 10, backgroundColor: colors.surface3 }}>
+                    {phases.map((r) => (
+                      <View key={r[0]} style={{ flex: Number(r[1]), backgroundColor: r[3] }} />
+                    ))}
+                  </View>
+                  {phases.map((r) => (
+                    <View key={r[0]} style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, gap: 10 }}>
+                      <Text style={{ color: colors.inkDim, fontSize: 13 }}>
+                        <Text style={{ color: r[3] }}>● </Text>
+                        {r[0]}
+                      </Text>
+                      <Text style={{ color: colors.ink, fontSize: 13, fontWeight: '700' }}>{fmtPct(r[1])} · {money(r[2])}</Text>
+                    </View>
+                  ))}
+                </SectionCard>
+              );
+            })()}
+            {owners.length > 0 && (
+              <SectionCard title="Who pays what" icon="users">
+                {owners.map(([name, share], i) => {
+                  const f = Number(share || 0);
+                  return (
+                    <View key={name} style={[{ paddingVertical: 12 }, i > 0 && { borderTopWidth: 1, borderColor: colors.border }]}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <Text style={{ color: colors.ink, fontSize: 14, fontWeight: '700' }}>{name}</Text>
+                        <Text style={{ color: colors.inkDim, fontSize: 13 }}>{Math.round(f * 100)}% share</Text>
+                      </View>
+                      <Text style={{ color: colors.inkDim, fontSize: 12.5, marginTop: 4 }}>
+                        Paid {money(paidAmt * f)} · Remaining {money(pendAmt * f)}
+                        {next ? ` · Next ${money(amt(next) * f)}` : ''}
+                      </Text>
+                    </View>
+                  );
+                })}
+                <Text style={{ color: colors.inkFaint, fontSize: 12, marginTop: 4 }}>Split by ownership percentage. Actual contributions may differ.</Text>
+              </SectionCard>
+            )}
+          </>
+        )}
+
+        {tab === 'details' && (
+          <>
+            <SectionCard title="Unit details" icon="properties">
+              {kv(
+                [
+                  ['Project', property.project_name],
+                  ['Developer', property.developer || '—'],
+                  ['Location', property.location || '—'],
+                  ['Unit no.', property.unit_no || '—'],
+                  ['Type', `${property.unit_type || '—'}${property.bedrooms ? ` · ${Math.trunc(property.bedrooms)} BR` : ''}`],
+                  ['Size (BUA)', property.size_sqft ? `${Math.round(property.size_sqft).toLocaleString('en-US')} sqft` : '—'],
+                  property.plot_sqft ? (['Plot', `${Math.round(property.plot_sqft).toLocaleString('en-US')} sqft`] as [string, string]) : null,
+                  ['Status', property.status || '—'],
+                  ['Payment plan', property.payment_plan || '—'],
+                  ['Purchased', fmtDate(property.purchase_date)],
+                  ['Handover', fmtDate(property.handover_date)],
+                ].filter(Boolean) as [string, string][]
+              )}
+            </SectionCard>
+            {owners.length > 0 && (
+              <SectionCard title="Ownership" icon="users">
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+                  {owners.map(([name, share]) => (
+                    <View key={name} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface2, borderRadius: 99, padding: 5, paddingRight: 12 }}>
+                      <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ color: colors.bg, fontSize: 11, fontWeight: '700' }}>{initials(name)}</Text>
+                      </View>
+                      <Text style={{ color: colors.ink, fontSize: 13, fontWeight: '600' }}>
+                        {name} <Text style={{ color: colors.inkDim, fontWeight: '400' }}>{Math.round(Number(share || 0) * 100)}%</Text>
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </SectionCard>
+            )}
+          </>
+        )}
+      </View>
     </ScrollView>
   );
 }
 
-function DetailItem({ label, value, style }: { label: string; value: string; style?: object }) {
-  const { colors } = useTheme();
-  return (
-    <View style={style}>
-      <Text style={[styles.kLabel, { color: colors.inkFaint }]}>{label.toUpperCase()}</Text>
-      <Text style={{ color: colors.ink, fontSize: 14.5, fontWeight: '700', marginTop: 3 }}>{value}</Text>
-    </View>
-  );
+function dated(ms: PaymentMilestone[]): boolean {
+  return ms.filter((m) => m.due_date).length >= 2;
 }
+
+const styles2 = StyleSheet.create({
+  tab: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 14 },
+  ghostBtn: { borderWidth: 1, paddingHorizontal: 14, minHeight: 38, alignItems: 'center', justifyContent: 'center' },
+  kv: { flexDirection: 'row', justifyContent: 'space-between', gap: 16, paddingVertical: 11 },
+  callout: { padding: 14, marginTop: 16 },
+  note: { fontSize: 13.5, lineHeight: 20, marginTop: 10 },
+  grpHead: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 18, paddingVertical: 14 },
+  mrow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingVertical: 13, borderTopWidth: 1 },
+});
 
 const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 40 },
