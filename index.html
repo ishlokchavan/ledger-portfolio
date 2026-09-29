@@ -6,9 +6,31 @@
 <meta name="theme-color" content="#f7f7f5">
 <meta name="color-scheme" content="light dark">
 <meta name="description" content="Ledger — off-plan real estate portfolio tracker">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="application-name" content="Ledger">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ledger">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<script>
+/* Runs before first paint: mark standalone (installed) mode and pick the iOS status-bar style for the saved theme. */
+(function(){
+  try {
+    var standalone = window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+    if(standalone) document.documentElement.classList.add('standalone');
+    var t = localStorage.getItem('ledger_theme') || 'light';
+    var dark = t === 'dark' || (t === 'system' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    var m = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if(m) m.setAttribute('content', dark ? 'black-translucent' : 'default');
+    if(dark){ var tc = document.querySelector('meta[name="theme-color"]'); if(tc) tc.setAttribute('content', '#080e0d'); }
+  } catch(e){}
+})();
+</script>
 <title>Ledger</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f7d72'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' font-weight='700' text-anchor='middle' fill='white'%3EL%3C/text%3E%3C/svg%3E">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="/vendor/supabase.js"></script>
 
 <style>
   /* =====================================================================
@@ -869,6 +891,13 @@
     .list-card{ overflow:clip; }
     .alloc-row{ padding:11px 0; }
   }
+  /* installed (standalone) mode: no browser chrome, so surface refresh and respect safe areas */
+  .standalone .refresh-btn{ display:inline-flex !important; }
+  .standalone body{ overscroll-behavior-y:contain; -webkit-user-select:none; user-select:none; }
+  .standalone input, .standalone textarea{ -webkit-user-select:text; user-select:text; }
+  .standalone .page{ padding-bottom:calc(96px + env(safe-area-inset-bottom)); }
+  .ptr{ position:fixed; top:calc(env(safe-area-inset-top) + 8px); left:50%; z-index:60; width:40px; height:40px; margin-left:-20px; border-radius:50%; background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow-md); display:flex; align-items:center; justify-content:center; color:var(--accent); transform:translateY(-70px); opacity:0; transition:opacity .15s; pointer-events:none; }
+  .ptr.spin svg{ animation:spin .8s linear infinite; }
   .hide-mobile-inline{ display:none; }
   @media (max-width:899px){ .refresh-btn{ display:none; } }
   @media (max-width:420px){ .topbar{ padding-left:12px; padding-right:12px; gap:8px; } .tools{ gap:6px; } .tools .icon-btn{ width:38px; height:38px; } }
@@ -923,6 +952,8 @@
     var dark = theme === 'dark' || (theme === 'system' && mqDark && mqDark.matches);
     var meta = document.querySelector('meta[name="theme-color"]');
     if(meta) meta.setAttribute('content', dark ? '#080e0d' : '#f7f7f5');
+    var sb = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if(sb) sb.setAttribute('content', dark ? 'black-translucent' : 'default');
   }
   if(mqDark && mqDark.addEventListener) mqDark.addEventListener('change', function(){ if(state.theme === 'system') applyTheme('system'); });
 
@@ -2157,6 +2188,19 @@
     toast('Exported ' + plural(list.length, 'payment'));
   }
 
+  /* ---------------- INSTALL (PWA) ---------------- */
+  var deferredInstall = null;
+  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferredInstall = e; if(state.profile && state.route.tab === 'account') render(); });
+  window.addEventListener('appinstalled', function(){ deferredInstall = null; toast('Ledger installed'); if(state.profile) render(); });
+  function isStandalone(){ return document.documentElement.classList.contains('standalone'); }
+  function isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+  function installRow(){
+    if(isStandalone()) return '';
+    if(deferredInstall) return '<div class="pref"><div class="t"><b>Install app</b><span>Add Ledger to your home screen for a full-screen, app-like experience</span></div><button class="btn btn-sm" data-act="install">Install</button></div>';
+    if(isIOS()) return '<div class="pref"><div class="t"><b>Install app</b><span>In Safari tap <b style="display:inline">Share</b>, then <b style="display:inline">Add to Home Screen</b></span></div></div>';
+    return '';
+  }
+
   /* ---------------- ACCOUNT ---------------- */
   function renderAccount(){
     var p = state.profile, isAdmin = p.role === 'admin';
@@ -2187,6 +2231,7 @@
           '<div class="pref"><div class="t"><b>Appearance</b><span>Match your device or choose a theme</span></div><div class="seg" role="group" aria-label="Theme">'+appearance+'</div></div>' +
           '<div class="pref"><div class="t"><b>Primary currency</b><span>AED — all figures are stored in dirhams</span></div><span class="pill accent">Default</span></div>' +
           '<div class="pref"><div class="t"><b>Secondary currency</b><span>'+esc(rateLabel(state.secondary))+' · '+esc(ratesNote())+'</span></div><button class="cur-btn" data-act="sheet" data-k="secondary" aria-label="Choose secondary currency"><b>'+esc(state.secondary)+'</b>'+icon('chevron','',13)+'</button></div>' +
+          installRow() +
           '<div class="pref desk-only"><div class="t"><b>Data</b><span>'+(state.updatedAt ? 'Updated '+new Date(state.updatedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : 'Live from your portfolio')+'</span></div><button class="btn btn-ghost btn-sm" data-act="refresh">'+icon('refresh','',14)+' Refresh</button></div>' +
           '<div class="pref desk-only"><div class="t"><b>Hide amounts</b><span>Mask every figure — handy in public</span></div><button class="switch" role="switch" data-act="privacy" aria-checked="'+state.privacy+'" aria-label="Hide amounts"></button></div>') +
         group(isAdmin ? 'Client portfolios' : 'Portfolio access', access2 || '<div class="empty-note" style="padding:18px;color:var(--ink-faint)">No portfolios assigned yet.</div>') +
@@ -2377,6 +2422,7 @@
     'clear-pay-filters': function(){ state.payQuery = ''; state.payRange = 'all'; state.payFrom = ''; state.payTo = ''; state.payProp = 'all'; render(); },
     'prop-tab': function(el){ state.propTab = el.getAttribute('data-v'); render(); },
     'tl-view': function(el){ state.tlView = el.getAttribute('data-v'); render(); },
+    install: function(){ if(!deferredInstall) return; deferredInstall.prompt(); deferredInstall.userChoice.then(function(){ deferredInstall = null; if(state.profile) render(); }); },
     sheet: function(el){ openSheet(el.getAttribute('data-k')); },
     'sheet-close': function(){ closeSheet(); },
     'sheet-pick': function(el){
@@ -2522,6 +2568,30 @@
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ bars.forEach(function(b){ b.style.height = b.getAttribute('data-h') + '%'; }); }); });
   });
   cfObserver.observe(app, { childList:true, subtree:true });
+
+  /* pull-to-refresh: installed apps have no browser reload button */
+  (function(){
+    if(!isStandalone()) return;
+    var ind = document.createElement('div'); ind.className = 'ptr'; ind.innerHTML = icon('refresh','',20,2); document.body.appendChild(ind);
+    var y0 = null, dy = 0;
+    document.addEventListener('touchstart', function(e){ y0 = (window.scrollY <= 0 && !sheet.type && !pal.open && e.touches.length === 1) ? e.touches[0].clientY : null; dy = 0; }, { passive:true });
+    document.addEventListener('touchmove', function(e){
+      if(y0 === null) return; dy = e.touches[0].clientY - y0;
+      if(dy > 0 && window.scrollY <= 0){ var k = Math.min(dy, 120); ind.style.opacity = Math.min(1, k / 80); ind.style.transform = 'translateY(' + (k - 70) + 'px) rotate(' + (k * 3) + 'deg)'; }
+    }, { passive:true });
+    document.addEventListener('touchend', function(){
+      if(y0 !== null && dy > 90){ ind.classList.add('spin'); ind.style.opacity = 1; ind.style.transform = 'translateY(20px)';
+        Promise.resolve(refreshData(true)).then(function(){ ind.classList.remove('spin'); ind.style.opacity = 0; ind.style.transform = 'translateY(-70px)'; }); }
+      else { ind.style.opacity = 0; ind.style.transform = 'translateY(-70px)'; }
+      y0 = null; dy = 0;
+    }, { passive:true });
+  })();
+
+  window.addEventListener('online', function(){ if(state.profile) toast('Back online'); });
+  window.addEventListener('offline', function(){ toast('You are offline — figures may be out of date'); });
+  if('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
+    window.addEventListener('load', function(){ navigator.serviceWorker.register('/sw.js').catch(function(){}); });
+  }
 
   init();
 })();

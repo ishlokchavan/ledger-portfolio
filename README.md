@@ -27,6 +27,21 @@ routes (deep links + back button), a 12-month payment forecast, a command palett
 (`Ctrl/Cmd+K`), keyboard shortcuts (`g o`, `g p`, `g y`, `h`, `c`), a "hide amounts"
 privacy mode, and CSV export of payments.
 
+## Install as an app (PWA)
+
+The web app is a Progressive Web App: open the live URL on your phone, then
+
+- **iPhone (Safari):** Share → **Add to Home Screen**
+- **Android (Chrome):** menu → **Install app** (or use *Install* in Account)
+- **Desktop Chrome/Edge:** the install icon in the address bar
+
+It then opens full-screen with its own icon, and the app shell loads instantly and works
+offline (portfolio figures always come live from Supabase, so they need a connection).
+Pieces: `manifest.webmanifest`, `sw.js` (service worker — bump `VERSION` to force a cache
+refresh), `icons/`, and `vendor/supabase.js` (Supabase JS is bundled locally rather than
+loaded from a CDN so the shell works offline). In installed mode there is a refresh button
+and pull-to-refresh, since there is no browser reload.
+
 ## Deploying changes
 
 **Web**: push to `main` — Vercel's GitHub integration builds and deploys
