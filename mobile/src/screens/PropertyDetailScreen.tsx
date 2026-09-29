@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle, G, Line, Path, Text as SvgText } from 'react-native-svg';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme } from '../theme/ThemeContext';
@@ -55,7 +55,7 @@ const COLS = [
 
 const TABLE_WIDTH = COLS.reduce((sum, c) => sum + c.width, 0);
 
-function MilestoneTable({ milestones, currency, fxRate }: { milestones: PaymentMilestone[]; currency: 'AED' | 'INR'; fxRate: number }) {
+function MilestoneTable({ milestones, currency, fxRate }: { milestones: PaymentMilestone[]; currency: string; fxRate: number }) {
   const { colors, radii } = useTheme();
 
   const totals = useMemo(
@@ -189,9 +189,22 @@ const amt = (m: PaymentMilestone) => Number(m.amount_aed || 0);
 const sumOf = (l: PaymentMilestone[]) => l.reduce((a, m) => a + amt(m), 0);
 
 /** Cumulative-payments step chart: solid = paid, dashed = scheduled, with today/handover/NOC markers. */
-function JourneyChart({ property, milestones, resale }: { property: Property; milestones: PaymentMilestone[]; resale: ReturnType<typeof resaleEligibility> }) {
-  const { colors } = useTheme();
+function JourneyChart({
+  property,
+  milestones,
+  resale,
+  money,
+  compact,
+}: {
+  property: Property;
+  milestones: PaymentMilestone[];
+  resale: ReturnType<typeof resaleEligibility>;
+  money: (v: number | null | undefined) => string;
+  compact: (v: number | null | undefined) => string;
+}) {
+  const { colors, radii } = useTheme();
   const [w, setW] = useState(0);
+  const [sel, setSel] = useState<number | null>(null);
   const dated = milestones.filter((m) => m.due_date).sort(byDueDate);
   if (dated.length < 2) return null;
 
@@ -212,12 +225,12 @@ function JourneyChart({ property, milestones, resale }: { property: Property; mi
   const open = dated.filter((m) => m.status !== 'Paid');
   let cum = 0;
   let act = `M${L},${Y(0)}`;
-  const dots: { x: number; y: number; kind: 'paid' | 'open' | 'late' }[] = [];
+  const dots: { x: number; y: number; kind: 'paid' | 'open' | 'late'; m: PaymentMilestone; cum: number }[] = [];
   paid.forEach((m) => {
     cum += amt(m);
     const x = X(parse(m.due_date)!);
     act += ` H${x} V${Y(cum)}`;
-    dots.push({ x, y: Y(cum), kind: 'paid' });
+    dots.push({ x, y: Y(cum), kind: 'paid', m, cum });
   });
   const xt = X(today);
   act += ` H${xt}`;
@@ -228,9 +241,21 @@ function JourneyChart({ property, milestones, resale }: { property: Property; mi
     const d = parse(m.due_date)!;
     const x = Math.max(X(d), xt);
     proj += ` H${x} V${Y(cum)}`;
-    dots.push({ x, y: Y(cum), kind: d < today ? 'late' : 'open' });
+    dots.push({ x, y: Y(cum), kind: d < today ? 'late' : 'open', m, cum });
   });
   proj += ` H${L + iw}`;
+  const pick = (x: number) => {
+    let best = -1;
+    let bd = Infinity;
+    dots.forEach((d, i) => {
+      const dist = Math.abs(d.x - x);
+      if (dist < bd) {
+        bd = dist;
+        best = i;
+      }
+    });
+    setSel(best >= 0 ? best : null);
+  };
   const noc = resale.applicable && resale.reqPct ? Y(resale.reqPct * Number(property.total_unit_price_aed || 0)) : null;
 
   return (
@@ -260,18 +285,54 @@ function JourneyChart({ property, milestones, resale }: { property: Property; mi
           )}
           <Line x1={xt} x2={xt} y1={T - 4} y2={T + ih} stroke={colors.ink} strokeWidth={1.5} />
           <SvgText x={xt} y={11} fontSize={10} fontWeight="700" fill={colors.ink} textAnchor="middle">Today</SvgText>
+          {sel != null && dots[sel] && <Line x1={dots[sel].x} x2={dots[sel].x} y1={T - 4} y2={T + ih} stroke={colors.accent} strokeWidth={1} />}
           {dots.map((d, i) => (
             <Circle
               key={i}
               cx={d.x}
               cy={d.y}
-              r={4.5}
+              r={sel === i ? 7 : 4.5}
               fill={d.kind === 'paid' ? colors.accent : d.kind === 'late' ? colors.bad : colors.surface}
               stroke={d.kind === 'paid' ? colors.accent : d.kind === 'late' ? colors.bad : colors.inkFaint}
               strokeWidth={2}
             />
           ))}
         </Svg>
+      )}
+      {w > 0 && (
+        // Transparent overlay: tap or drag anywhere on the chart to snap to the nearest milestone.
+        <View
+          style={{ position: 'absolute', left: 0, top: 0, width: w, height: H }}
+          onTouchStart={(e) => pick(e.nativeEvent.locationX)}
+          onTouchMove={(e) => pick(e.nativeEvent.locationX)}
+          accessible
+          accessibilityLabel="Payment journey chart. Tap or drag to inspect milestones."
+        />
+      )}
+      {sel != null && dots[sel] && w > 0 && (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            width: 190,
+            left: Math.max(0, Math.min(w - 190, dots[sel].x - 95)),
+            top: Math.max(0, dots[sel].y - 92),
+            padding: 10,
+            borderRadius: radii.md,
+            backgroundColor: colors.ink,
+          }}
+        >
+          <Text style={{ color: colors.bg, fontSize: 12.5, fontWeight: '700' }} numberOfLines={2}>{dots[sel].m.milestone_event}</Text>
+          <Text style={{ color: colors.bg, opacity: 0.8, fontSize: 11.5, marginTop: 2 }}>
+            {fmtDate(dots[sel].m.due_date)} · {dots[sel].kind === 'paid' ? 'Paid' : dots[sel].kind === 'late' ? 'Overdue' : 'Scheduled'}
+          </Text>
+          <Text style={{ color: colors.bg, opacity: 0.8, fontSize: 11.5, marginTop: 2 }}>
+            {dots[sel].kind === 'paid' ? 'Paid' : 'Due'} {money(amt(dots[sel].m))}
+          </Text>
+          <Text style={{ color: colors.bg, opacity: 0.8, fontSize: 11.5 }}>
+            Cumulative {Math.round(Math.min(1, dots[sel].cum / denom) * 100)}% · {compact(dots[sel].cum)}
+          </Text>
+        </View>
       )}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: L, marginTop: 6 }}>
         <Text style={{ color: colors.inkFaint, fontSize: 11, fontWeight: '600' }}>{monthYear(t0)}</Text>
@@ -502,7 +563,13 @@ export function PropertyDetailScreen({ route }: Props) {
           <>
             <View style={{ flexDirection: 'row', gap: 3, height: 12, marginTop: 16, borderRadius: 99, overflow: 'hidden' }}>
               {segList.map((s) => (
-                <View key={s.label} style={{ flex: Math.max(s.amt, segTotal * 0.01), backgroundColor: s.color }} />
+                <Pressable
+                  key={s.label}
+                  onPress={() => setTab('schedule')}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${s.label} ${money(s.amt)}. Open schedule`}
+                  style={{ flex: Math.max(s.amt, segTotal * 0.01), backgroundColor: s.color }}
+                />
               ))}
             </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 6, marginTop: 12 }}>
@@ -585,8 +652,8 @@ export function PropertyDetailScreen({ route }: Props) {
 
             {dated(ms) && (
               <SectionCard title="Payment journey" icon="money">
-                <Text style={{ color: colors.inkDim, fontSize: 12.5, marginBottom: 8 }}>Cumulative share of the price paid over time</Text>
-                <JourneyChart property={property} milestones={ms} resale={resale} />
+                <Text style={{ color: colors.inkDim, fontSize: 12.5, marginBottom: 8 }}>Cumulative share of the price paid over time. Tap or drag to inspect.</Text>
+                <JourneyChart property={property} milestones={ms} resale={resale} money={money} compact={compact} />
               </SectionCard>
             )}
 

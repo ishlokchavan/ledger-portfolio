@@ -43,7 +43,7 @@ export function PropertyCard({
         </View>
 
         <View style={styles.facts}>
-          <Pill label={property.status || '—'} tone="neutral" />
+          {property.status && !/construction/i.test(property.status) && <Pill label={property.status} tone="neutral" />}
           {resale.eligible && <Pill label="Resale ready" tone="good" />}
           <Text style={{ color: colors.inkDim, fontSize: 12.5 }}>
             <Text style={{ color: colors.ink, fontWeight: '700' }}>{property.unit_type || '—'}</Text>

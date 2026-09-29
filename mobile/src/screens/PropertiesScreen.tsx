@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme } from '../theme/ThemeContext';
 import { useAppData } from '../context/AppDataContext';
 import { PropertyCard } from '../components/PropertyCard';
-import { Card, Chip, EmptyNote, PageHeader, SearchField } from '../components/UI';
+import { Chip, EmptyNote, PageHeader, SearchField } from '../components/UI';
+import { Icon } from '../components/Icon';
 import { Screen } from '../components/Screen';
 import { PropertiesSkeleton } from '../components/Skeleton';
 import { fmtCompact, nextMilestone, paidPct, plural, resaleEligibility } from '../lib/format';
@@ -13,15 +14,16 @@ import type { PropertiesStackParamList } from '../navigation/types';
 type Props = NativeStackScreenProps<PropertiesStackParamList, 'PropertiesList'>;
 type Sort = 'handover' | 'value' | 'progress' | 'name';
 const SORTS: { id: Sort; label: string }[] = [
-  { id: 'handover', label: 'Handover' },
-  { id: 'value', label: 'Value' },
+  { id: 'handover', label: 'Handover: soonest' },
+  { id: 'value', label: 'Value: highest' },
   { id: 'progress', label: 'Most paid' },
-  { id: 'name', label: 'A–Z' },
+  { id: 'name', label: 'Name: A–Z' },
 ];
 
 export function PropertiesScreen({ navigation }: Props) {
-  const { colors } = useTheme();
+  const { colors, radii } = useTheme();
   const { properties, milestones, currency, fxRate, loading, refresh } = useAppData();
+  const [sortOpen, setSortOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
@@ -54,10 +56,10 @@ export function PropertiesScreen({ navigation }: Props) {
   }, [properties, query, filter, sort]);
 
   const totals = useMemo(() => {
-    const value = list.reduce((a, p) => a + Number(p.total_unit_price_aed || 0), 0);
-    const paid = list.reduce((a, p) => a + Number(p.total_paid_aed || 0), 0);
+    const value = properties.reduce((a, p) => a + Number(p.total_unit_price_aed || 0), 0);
+    const paid = properties.reduce((a, p) => a + Number(p.total_paid_aed || 0), 0);
     return { value, paid, pct: value > 0 ? Math.round((paid / value) * 100) : 0 };
-  }, [list]);
+  }, [properties]);
 
   if (loading && properties.length === 0 && !refreshing) {
     return (
@@ -70,37 +72,36 @@ export function PropertiesScreen({ navigation }: Props) {
     );
   }
 
+  const showFilters = statuses.length > 1 || resaleN > 0;
   const header = (
     <View>
-      <PageHeader title="Properties" subtitle={`${plural(properties.length, 'unit')} in this portfolio.`} />
-      <SearchField value={query} onChangeText={setQuery} placeholder="Search name, developer or location" />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-        <Chip label="All" count={properties.length} active={filter === 'all'} onPress={() => setFilter('all')} />
-        {statuses.map((s) => (
-          <Chip key={s} label={s} count={properties.filter((p) => p.status === s).length} active={filter === s} onPress={() => setFilter(s)} />
-        ))}
-        {resaleN > 0 && <Chip label="Resale-ready" count={resaleN} active={filter === 'resale'} onPress={() => setFilter('resale')} />}
-      </ScrollView>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.chips, { paddingTop: 0 }]}>
-        <Text style={[styles.sortLabel, { color: colors.inkFaint }]}>SORT</Text>
-        {SORTS.map((s) => (
-          <Chip key={s.id} label={s.label} active={sort === s.id} onPress={() => setSort(s.id)} />
-        ))}
-      </ScrollView>
-      {list.length > 0 && (
-        <Card style={styles.strip}>
-          {[
-            ['Showing', `${list.length} of ${properties.length}`],
-            ['Value', fmtCompact(totals.value, currency, fxRate)],
-            ['Paid', fmtCompact(totals.paid, currency, fxRate)],
-            ['Avg.', `${totals.pct}%`],
-          ].map(([k, v]) => (
-            <View key={k} style={{ flex: 1, minWidth: 0 }}>
-              <Text style={{ color: colors.inkFaint, fontSize: 10.5, fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase' }}>{k}</Text>
-              <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '700', marginTop: 3 }} numberOfLines={1} adjustsFontSizeToFit>{v}</Text>
-            </View>
-          ))}
-        </Card>
+      <PageHeader
+        title="Properties"
+        subtitle={`${plural(properties.length, 'unit')} · ${fmtCompact(totals.value, currency, fxRate)} total · ${totals.pct}% paid`}
+      />
+      <View style={styles.searchRow}>
+        <View style={{ flex: 1 }}>
+          <SearchField value={query} onChangeText={setQuery} placeholder="Search properties" />
+        </View>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => setSortOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Sort properties"
+          style={[styles.sortBtn, { borderColor: colors.borderStrong, backgroundColor: colors.surface, borderRadius: radii.md }]}
+        >
+          <Icon name="filter" size={18} color={sort === 'handover' ? colors.inkDim : colors.accent} />
+        </TouchableOpacity>
+      </View>
+      {showFilters && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          <Chip label="All" count={properties.length} active={filter === 'all'} onPress={() => setFilter('all')} />
+          {statuses.length > 1 &&
+            statuses.map((s) => (
+              <Chip key={s} label={s} count={properties.filter((p) => p.status === s).length} active={filter === s} onPress={() => setFilter(s)} />
+            ))}
+          {resaleN > 0 && <Chip label="Resale-ready" count={resaleN} active={filter === 'resale'} onPress={() => setFilter('resale')} />}
+        </ScrollView>
       )}
     </View>
   );
@@ -126,13 +127,37 @@ export function PropertiesScreen({ navigation }: Props) {
           />
         )}
       />
+      <Modal visible={sortOpen} transparent animationType="fade" onRequestClose={() => setSortOpen(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setSortOpen(false)}>
+          <View style={[styles.sheet, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radii.xl }]}>
+            <Text style={{ color: colors.ink, fontWeight: '700', fontSize: 15, marginBottom: 10 }}>Sort by</Text>
+            {SORTS.map((o) => (
+              <TouchableOpacity
+                key={o.id}
+                activeOpacity={0.7}
+                style={[styles.opt, sort === o.id && { backgroundColor: colors.accentSoft, borderRadius: radii.sm }]}
+                onPress={() => {
+                  setSort(o.id);
+                  setSortOpen(false);
+                }}
+              >
+                <Text style={{ color: colors.ink, fontSize: 15, fontWeight: sort === o.id ? '700' : '400', flex: 1 }}>{o.label}</Text>
+                {sort === o.id && <Icon name="check" size={16} color={colors.accent} />}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 48 },
+  searchRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  sortBtn: { width: 46, height: 46, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   chips: { gap: 8, paddingVertical: 12, alignItems: 'center' },
-  sortLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 0.7, marginRight: 2 },
-  strip: { flexDirection: 'row', gap: 12, padding: 14, marginBottom: 16 },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  sheet: { padding: 18, paddingBottom: 32, borderWidth: 1 },
+  opt: { flexDirection: 'row', alignItems: 'center', paddingVertical: 13, paddingHorizontal: 12 },
 });

@@ -84,7 +84,8 @@ export interface FxRate {
 /** Five-way UI status derived from due_date + status. */
 export type MilestoneState = 'paid' | 'overdue' | 'soon' | 'upcoming' | 'undecided';
 
-export type Currency = 'AED' | 'INR';
+/** ISO 4217 code. AED is the base; the user picks one secondary currency in Account. */
+export type Currency = string;
 export type ThemeMode = 'light' | 'dark';
 /** What the user picked; 'system' resolves to light/dark from the device. */
 export type ThemePreference = ThemeMode | 'system';

@@ -8,7 +8,7 @@ import { Segmented } from './UI';
 
 export function TopBar() {
   const { colors, radii } = useTheme();
-  const { profile, portfolios, currentPortfolioId, setCurrentPortfolioId, currency, setCurrency } = useAppData();
+  const { profile, portfolios, currentPortfolioId, setCurrentPortfolioId, currency, setCurrency, secondary } = useAppData();
   const [open, setOpen] = useState(false);
 
   const portfolio = portfolios.find((p) => p.id === currentPortfolioId);
@@ -30,7 +30,7 @@ export function TopBar() {
           onChange={setCurrency}
           options={[
             { id: 'AED', label: 'AED' },
-            { id: 'INR', label: 'INR' },
+            { id: secondary, label: secondary },
           ]}
         />
       </View>

@@ -1,14 +1,17 @@
+import { compactAmount, fullAmount, MAX_FULL } from './currency';
 import type { Currency, MilestoneState, PaymentMilestone, Property, ResaleEligibility } from '../types';
 
 const TODAY = new Date();
 TODAY.setHours(0, 0, 0, 0);
 
+/**
+ * `fxRate` is the AED -> `currency` rate (1 for AED). The full figure is shown when it fits;
+ * otherwise the compact form, so a 1B AED portfolio can never break a layout.
+ */
 export function fmtMoney(aed: number | null | undefined, currency: Currency, fxRate: number): string {
-  const amount = Number(aed || 0);
-  const v = currency === 'INR' ? amount * (fxRate || 25.96) : amount;
-  const symbol = currency === 'INR' ? '₹' : 'AED ';
-  const rounded = Math.round(v);
-  return symbol + rounded.toLocaleString(currency === 'INR' ? 'en-IN' : 'en-US');
+  const v = Number(aed || 0) * (currency === 'AED' ? 1 : fxRate || 1);
+  const full = fullAmount(v, currency);
+  return full.length > MAX_FULL ? compactAmount(v, currency) : full;
 }
 
 export function fmtDate(d: string | null | undefined): string {
@@ -62,19 +65,9 @@ export function paidPct(p: Property): number {
   return p.total_unit_price_aed > 0 ? Math.round((p.total_paid_aed / p.total_unit_price_aed) * 100) : 0;
 }
 
-/** Compact money for tiles: AED 1.25M / AED 250K, or ₹1.2 Cr / ₹4.5 L for INR. */
+/** Compact money for tiles: AED 1.25M / 12.4B, or ₹1.2 Cr / ₹4.5 L for lakh-crore currencies. */
 export function fmtCompact(aed: number | null | undefined, currency: Currency, fxRate: number): string {
-  const amount = Number(aed || 0);
-  const v = currency === 'INR' ? amount * (fxRate || 25.96) : amount;
-  const a = Math.abs(v);
-  const r = (n: number, d: number) => String(Math.round(n * d) / d);
-  let out: string;
-  if (currency === 'INR') {
-    out = a >= 1e7 ? r(a / 1e7, 100) + ' Cr' : a >= 1e5 ? r(a / 1e5, 100) + ' L' : a >= 1e3 ? r(a / 1e3, 10) + 'K' : String(Math.round(a));
-  } else {
-    out = a >= 1e6 ? r(a / 1e6, 100) + 'M' : a >= 1e3 ? r(a / 1e3, 10) + 'K' : String(Math.round(a));
-  }
-  return (v < 0 ? '-' : '') + (currency === 'INR' ? '₹' : 'AED ') + out;
+  return compactAmount(Number(aed || 0) * (currency === 'AED' ? 1 : fxRate || 1), currency);
 }
 
 export function relDays(n: number | null): string {

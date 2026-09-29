@@ -1,8 +1,9 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { FlatList, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { useAppData } from '../context/AppDataContext';
-import { Card, PageHeader, Pill, Segmented } from '../components/UI';
+import { Card, PageHeader, Pill, SearchField, Segmented } from '../components/UI';
+import { CURRENCIES } from '../lib/currency';
 import { Icon } from '../components/Icon';
 import { Screen } from '../components/Screen';
 import { initials } from '../lib/format';
@@ -33,7 +34,13 @@ function Pref({ title, sub, children, first }: { title: string; sub?: string; ch
 
 export function AccountScreen() {
   const { colors, radii, preference, setPreference } = useTheme();
-  const { profile, portfolios, currentPortfolioId, setCurrentPortfolioId, currency, setCurrency, fxRate, logout } = useAppData();
+  const { profile, portfolios, currentPortfolioId, setCurrentPortfolioId, secondary, setSecondary, ratesNote, rateText, logout } = useAppData();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [q, setQ] = useState('');
+  const options = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    return CURRENCIES.filter((c) => c.code !== 'AED' && (!t || (c.code + ' ' + c.name).toLowerCase().includes(t)));
+  }, [q]);
 
   if (!profile) return null;
   const isAdmin = profile.role === 'admin';
@@ -68,8 +75,20 @@ export function AccountScreen() {
               ]}
             />
           </Pref>
-          <Pref title="Currency" sub={`1 AED = ₹${fxRate}`}>
-            <Segmented accent value={currency} onChange={setCurrency} options={[{ id: 'AED', label: 'AED' }, { id: 'INR', label: 'INR' }]} />
+          <Pref title="Primary currency" sub="AED — all figures are stored in dirhams">
+            <Pill label="Default" tone="accent" />
+          </Pref>
+          <Pref title="Secondary currency" sub={`${rateText(secondary)} · ${ratesNote}`}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setPickerOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Choose secondary currency"
+              style={[styles.curBtn, { borderColor: colors.borderStrong, backgroundColor: colors.surface, borderRadius: radii.md }]}
+            >
+              <Text style={{ color: colors.ink, fontSize: 13.5, fontWeight: '700' }}>{secondary}</Text>
+              <Icon name="chevron" size={13} color={colors.inkFaint} />
+            </TouchableOpacity>
           </Pref>
         </Group>
 
@@ -124,6 +143,40 @@ export function AccountScreen() {
           <Text style={{ color: colors.bad, fontWeight: '700', fontSize: 15 }}>Log out</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal visible={pickerOpen} transparent animationType="fade" onRequestClose={() => setPickerOpen(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setPickerOpen(false)}>
+          <Pressable style={[styles.sheet, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radii.xl }]} onPress={() => {}}>
+            <Text style={{ color: colors.ink, fontWeight: '700', fontSize: 15, marginBottom: 10 }}>Secondary currency</Text>
+            <SearchField value={q} onChangeText={setQ} placeholder="Search currency" />
+            <FlatList
+              style={{ marginTop: 10 }}
+              data={options}
+              keyExtractor={(c) => c.code}
+              keyboardShouldPersistTaps="handled"
+              renderItem={({ item }) => {
+                const active = item.code === secondary;
+                return (
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    style={[styles.opt, active && { backgroundColor: colors.accentSoft, borderRadius: radii.sm }]}
+                    onPress={() => {
+                      setSecondary(item.code);
+                      setPickerOpen(false);
+                      setQ('');
+                    }}
+                  >
+                    <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '700', width: 52 }}>{item.code}</Text>
+                    <Text style={{ color: colors.inkDim, fontSize: 14, flex: 1 }}>{item.name}</Text>
+                    {active && <Icon name="check" size={16} color={colors.accent} />}
+                  </TouchableOpacity>
+                );
+              }}
+              ListEmptyComponent={<Text style={{ color: colors.inkFaint, padding: 16, textAlign: 'center' }}>No matching currency.</Text>}
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </Screen>
   );
 }
@@ -136,5 +189,9 @@ const styles = StyleSheet.create({
   smallAvatar: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   pref: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
   access: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 13, minHeight: 56 },
+  curBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, minHeight: 40, borderWidth: 1 },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  sheet: { padding: 18, paddingBottom: 30, borderWidth: 1, maxHeight: '75%' },
+  opt: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingVertical: 13 },
   logoutBtn: { borderWidth: 1, marginTop: 24, minHeight: 50, alignItems: 'center', justifyContent: 'center' },
 });

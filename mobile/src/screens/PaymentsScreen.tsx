@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '../theme/ThemeContext';
 import { useAppData } from '../context/AppDataContext';
 import { Icon } from '../components/Icon';
@@ -7,7 +8,7 @@ import { Card, EmptyNote, PageHeader, SearchField } from '../components/UI';
 import { Screen } from '../components/Screen';
 import { PayRow } from '../components/PayRow';
 import { PayListSkeleton } from '../components/Skeleton';
-import { fmtCompact, fmtMoney, milestoneState, plural } from '../lib/format';
+import { fmtCompact, fmtDate, fmtMoney, milestoneState, plural } from '../lib/format';
 import type { MilestoneState, PaymentMilestone } from '../types';
 
 interface TabDef {
@@ -24,6 +25,47 @@ const PAY_TABS: TabDef[] = [
   { id: 'paid', label: 'Paid', empty: 'No payments recorded yet.' },
 ];
 
+type RangeId = 'all' | 'month' | 'last30' | 'next30' | 'next90' | 'quarter' | 'year' | 'custom';
+const RANGES: { id: RangeId; label: string }[] = [
+  { id: 'all', label: 'All time' },
+  { id: 'month', label: 'This month' },
+  { id: 'last30', label: 'Last 30 days' },
+  { id: 'next30', label: 'Next 30 days' },
+  { id: 'next90', label: 'Next 90 days' },
+  { id: 'quarter', label: 'This quarter' },
+  { id: 'year', label: 'This year' },
+];
+const pad = (n: number) => String(n).padStart(2, '0');
+const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+
+function rangeBounds(range: RangeId, from: Date | null, to: Date | null): [string, string] | null {
+  const t = new Date();
+  const today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  const y = today.getFullYear();
+  const m = today.getMonth();
+  switch (range) {
+    case 'month':
+      return [iso(new Date(y, m, 1)), iso(new Date(y, m + 1, 0))];
+    case 'last30':
+      return [iso(addDays(today, -30)), iso(today)];
+    case 'next30':
+      return [iso(today), iso(addDays(today, 30))];
+    case 'next90':
+      return [iso(today), iso(addDays(today, 90))];
+    case 'quarter': {
+      const q = Math.floor(m / 3) * 3;
+      return [iso(new Date(y, q, 1)), iso(new Date(y, q + 3, 0))];
+    }
+    case 'year':
+      return [`${y}-01-01`, `${y}-12-31`];
+    case 'custom':
+      return from || to ? [from ? iso(from) : '0000-01-01', to ? iso(to) : '9999-12-31'] : null;
+    default:
+      return null;
+  }
+}
+
 const byDue = (a: PaymentMilestone, b: PaymentMilestone) =>
   new Date(a.due_date || '2099-01-01').getTime() - new Date(b.due_date || '2099-01-01').getTime();
 
@@ -31,7 +73,10 @@ export function PaymentsScreen() {
   const { colors, radii } = useTheme();
   const { properties, milestones, currency, fxRate, loading, refresh } = useAppData();
   const [activeTab, setActiveTab] = useState<MilestoneState>('soon');
-  const [period, setPeriod] = useState<string>('all');
+  const [range, setRange] = useState<RangeId>('all');
+  const [from, setFrom] = useState<Date | null>(null);
+  const [to, setTo] = useState<Date | null>(null);
+  const [picking, setPicking] = useState<'from' | 'to' | null>(null);
   const [query, setQuery] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,29 +88,18 @@ export function PaymentsScreen() {
   };
 
   // All hooks run before any early return (rules of hooks).
-  const years = useMemo(() => {
-    const set = new Set<number>();
-    milestones.forEach((m) => {
-      const y = m.year || (m.due_date ? Number(m.due_date.slice(0, 4)) : null);
-      if (y) set.add(y);
-    });
-    return Array.from(set).sort((a, b) => a - b);
-  }, [milestones]);
-
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const bounds = rangeBounds(range, from, to);
     return milestones.filter((m) => {
-      if (period !== 'all') {
-        const y = m.year || (m.due_date ? Number(m.due_date.slice(0, 4)) : null);
-        if (String(y) !== period) return false;
-      }
+      if (bounds && (!m.due_date || m.due_date < bounds[0] || m.due_date > bounds[1])) return false;
       if (q) {
         const p = properties.find((x) => x.id === m.property_id);
         if ([m.milestone_event, p?.project_name, m.remarks].join(' ').toLowerCase().indexOf(q) === -1) return false;
       }
       return true;
     });
-  }, [milestones, properties, period, query]);
+  }, [milestones, properties, range, from, to, query]);
 
   const buckets = useMemo(() => {
     const b: Record<MilestoneState, PaymentMilestone[]> = { overdue: [], soon: [], upcoming: [], undecided: [], paid: [] };
@@ -90,6 +124,18 @@ export function PaymentsScreen() {
     });
     return out;
   }, [buckets, activeTab]);
+
+  const rangeText =
+    range === 'custom'
+      ? from && to
+        ? `${fmtDate(iso(from))} – ${fmtDate(iso(to))}`
+        : from
+          ? `From ${fmtDate(iso(from))}`
+          : to
+            ? `Until ${fmtDate(iso(to))}`
+            : 'Custom range'
+      : RANGES.find((r) => r.id === range)!.label;
+  const rangeActive = range !== 'all';
 
   const sum = (l: PaymentMilestone[]) => l.reduce((a, m) => a + Number(m.amount_aed || 0), 0);
   const dot = (id: MilestoneState) => (id === 'overdue' ? colors.bad : id === 'soon' ? colors.warn : id === 'upcoming' ? colors.info : id === 'paid' ? colors.good : colors.inkFaint);
@@ -147,10 +193,11 @@ export function PaymentsScreen() {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => setPickerOpen(true)}
-            accessibilityLabel="Filter by year"
+            accessibilityLabel="Filter by date range"
             style={[styles.periodBtn, { backgroundColor: colors.surface, borderColor: colors.borderStrong, borderRadius: radii.md }]}
           >
-            <Text style={{ color: colors.ink, fontSize: 13, fontWeight: '700' }}>{period === 'all' ? 'All years' : period}</Text>
+            <Icon name="calendar" size={14} color={rangeActive ? colors.accent : colors.inkDim} />
+            <Text style={{ color: colors.ink, fontSize: 13, fontWeight: '700', maxWidth: 130 }} numberOfLines={1}>{rangeText}</Text>
             <Icon name="chevron" size={13} color={colors.inkFaint} />
           </TouchableOpacity>
         </View>
@@ -187,29 +234,96 @@ export function PaymentsScreen() {
           </>
         ) : (
           <Card>
-            <EmptyNote>{query || period !== 'all' ? 'No payments match the current search or filters.' : activeDef.empty}</EmptyNote>
+            <EmptyNote>{query || rangeActive ? (activeTab === 'undecided' && rangeActive ? 'Milestones without a date can only be listed under “All time”.' : 'No payments match the current search or filters.') : activeDef.empty}</EmptyNote>
           </Card>
         )}
       </ScrollView>
 
-      <Modal visible={pickerOpen} transparent animationType="fade" onRequestClose={() => setPickerOpen(false)}>
-        <Pressable style={styles.modalBackdrop} onPress={() => setPickerOpen(false)}>
-          <View style={[styles.modalSheet, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radii.xl }]}>
-            <Text style={{ color: colors.ink, fontWeight: '700', fontSize: 15, marginBottom: 10 }}>Year</Text>
-            {['all', ...years.map(String)].map((y) => (
-              <TouchableOpacity
-                key={y}
-                activeOpacity={0.7}
-                style={[styles.modalOption, y === period && { backgroundColor: colors.accentSoft, borderRadius: radii.sm }]}
-                onPress={() => {
-                  setPeriod(y);
-                  setPickerOpen(false);
-                }}
-              >
-                <Text style={{ color: colors.ink, fontSize: 15, fontWeight: y === period ? '700' : '400' }}>{y === 'all' ? 'All years' : y}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+      <Modal visible={pickerOpen} transparent animationType="fade" onRequestClose={() => { setPicking(null); setPickerOpen(false); }}>
+        <Pressable style={styles.modalBackdrop} onPress={() => { setPicking(null); setPickerOpen(false); }}>
+          <Pressable style={[styles.modalSheet, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radii.xl }]} onPress={() => {}}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={{ color: colors.ink, fontWeight: '700', fontSize: 15, marginBottom: 10 }}>Date range</Text>
+              {RANGES.map((r) => (
+                <TouchableOpacity
+                  key={r.id}
+                  activeOpacity={0.7}
+                  style={[styles.modalOption, range === r.id && { backgroundColor: colors.accentSoft, borderRadius: radii.sm }]}
+                  onPress={() => {
+                    setRange(r.id);
+                    setPicking(null);
+                    setPickerOpen(false);
+                  }}
+                >
+                  <Text style={{ color: colors.ink, fontSize: 15, fontWeight: range === r.id ? '700' : '400' }}>{r.label}</Text>
+                </TouchableOpacity>
+              ))}
+              <View style={{ borderTopWidth: 1, borderColor: colors.border, marginTop: 8, paddingTop: 14 }}>
+                <Text style={{ color: colors.inkFaint, fontSize: 11.5, fontWeight: '700', letterSpacing: 0.7, marginBottom: 8 }}>CUSTOM RANGE</Text>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  {(['from', 'to'] as const).map((k) => {
+                    const val = k === 'from' ? from : to;
+                    return (
+                      <TouchableOpacity
+                        key={k}
+                        activeOpacity={0.7}
+                        onPress={() => {
+                          setRange('custom');
+                          setPicking(picking === k ? null : k);
+                        }}
+                        style={[styles.dateBtn, { borderColor: picking === k ? colors.accent : colors.borderStrong, backgroundColor: colors.surface, borderRadius: radii.md }]}
+                      >
+                        <Text style={{ color: colors.inkFaint, fontSize: 10.5, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 }}>{k}</Text>
+                        <Text style={{ color: val ? colors.ink : colors.inkFaint, fontSize: 14, fontWeight: '700', marginTop: 3 }}>{val ? fmtDate(iso(val)) : 'Select date'}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                {picking && (
+                  <DateTimePicker
+                    value={(picking === 'from' ? from : to) ?? new Date()}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                    minimumDate={picking === 'to' && from ? from : undefined}
+                    maximumDate={picking === 'from' && to ? to : undefined}
+                    onChange={(e, d) => {
+                      if (Platform.OS === 'android') setPicking(null);
+                      if (e.type === 'set' && d) {
+                        if (picking === 'from') setFrom(d);
+                        else setTo(d);
+                        setRange('custom');
+                      }
+                    }}
+                  />
+                )}
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    style={[styles.sheetBtn, { borderColor: colors.borderStrong, borderRadius: radii.md }]}
+                    onPress={() => {
+                      setRange('all');
+                      setFrom(null);
+                      setTo(null);
+                      setPicking(null);
+                      setPickerOpen(false);
+                    }}
+                  >
+                    <Text style={{ color: colors.ink, fontWeight: '700', fontSize: 14 }}>Clear</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={[styles.sheetBtn, { backgroundColor: colors.accent, borderColor: colors.accent, borderRadius: radii.md }]}
+                    onPress={() => {
+                      setPicking(null);
+                      setPickerOpen(false);
+                    }}
+                  >
+                    <Text style={{ color: colors.accentInk, fontWeight: '700', fontSize: 14 }}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </ScrollView>
+          </Pressable>
         </Pressable>
       </Modal>
     </Screen>
@@ -225,6 +339,8 @@ const styles = StyleSheet.create({
   periodBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderWidth: 1, minHeight: 46 },
   monthHead: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10 },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  modalSheet: { padding: 18, paddingBottom: 34, borderWidth: 1, maxHeight: '60%' },
+  modalSheet: { padding: 18, paddingBottom: 34, borderWidth: 1, maxHeight: '85%' },
+  dateBtn: { flex: 1, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10 },
+  sheetBtn: { flex: 1, minHeight: 46, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   modalOption: { paddingVertical: 13, paddingHorizontal: 12 },
 });
