@@ -65,7 +65,7 @@ export function PayRow({
         </Text>
         <View style={styles.milestoneLine}>
           <Icon name="calendar" size={12} color={colors.inkFaint} />
-          <Text style={[styles.milestoneText, { color: colors.inkDim }]} numberOfLines={1}>
+          <Text style={[styles.milestoneText, { color: colors.inkDim, flexShrink: 1 }]} numberOfLines={1}>
             {' '}
             {milestone.milestone_event}
             {showDate && milestone.due_date ? ` · ${fmtDate(milestone.due_date)}` : ''}
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   daysNum: { fontSize: 15, fontWeight: '700' },
   daysSub: { fontSize: 8.5, textTransform: 'uppercase', marginTop: 2, letterSpacing: 0.3 },
   propName: { fontSize: 13.5, fontWeight: '700' },
-  milestoneLine: { flexDirection: 'row', alignItems: 'center', marginTop: 2, flexWrap: 'wrap' },
+  milestoneLine: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
   milestoneText: { fontSize: 12 },
   amount: { fontSize: 13.5, fontWeight: '700', fontVariant: ['tabular-nums'] },
 });
