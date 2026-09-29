@@ -8,9 +8,6 @@
 <meta name="description" content="Ledger — off-plan real estate portfolio tracker">
 <title>Ledger</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f7d72'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' font-weight='700' text-anchor='middle' fill='white'%3EL%3C/text%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 
 <style>
@@ -73,9 +70,9 @@
      ===================================================================== */
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ margin:0; min-height:100%; }
-  body{ background:var(--bg); color:var(--ink); font-family:'Inter',system-ui,sans-serif; font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums; font-feature-settings:'cv11','ss01'; }
-  h1,h2,h3,h4,.serif{ font-family:'Inter',system-ui,sans-serif; text-wrap:balance; margin:0; font-weight:700; letter-spacing:-.022em; }
-  .mono{ font-family:'Inter',system-ui,sans-serif; font-variant-numeric:tabular-nums; }
+  body{ background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums; }
+  h1,h2,h3,h4,.serif{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; text-wrap:balance; margin:0; font-weight:700; letter-spacing:-.022em; }
+  .mono{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-variant-numeric:tabular-nums; }
   p{ margin:0; }
   a{ color:var(--accent); }
   button{ font-family:inherit; color:inherit; }
@@ -90,6 +87,13 @@
   .skip-link:focus{ top:12px; }
 
   #app{ min-height:100vh; }
+  .sect{ min-width:0; }
+  .sect-label{ font-size:12px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:var(--ink-faint); margin:24px 0 10px; }
+  .grid > .sect .sect-label{ margin-top:0; }
+  .g-two, .g-kpi{ margin-top:0; }
+  .page-head + .grid, .grid + .grid, .grid + .sect, .sect + .sect{ margin-top:14px; }
+  .desk-only{ display:none !important; }
+  @media (min-width:900px){ .desk-only{ display:revert !important; } div.desk-only[style*="justify-content:flex-end"]{ display:flex !important; } .desk-only.next-foot{ display:flex !important; } .icon-btn.desk-only{ display:inline-flex !important; } }
 
   /* buttons */
   .btn{
@@ -184,10 +188,10 @@
   .brand{ display:flex; align-items:center; gap:11px; }
   .brand-mark{
     width:38px; height:38px; border-radius:11px; background:linear-gradient(145deg,var(--accent),var(--accent-strong)); color:var(--accent-ink);
-    display:flex; align-items:center; justify-content:center; font-family:'Inter',system-ui,sans-serif; font-weight:700; font-size:20px; flex:none;
+    display:flex; align-items:center; justify-content:center; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-weight:700; font-size:20px; flex:none;
     box-shadow:0 6px 16px -6px var(--accent);
   }
-  .brand-name{ font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:20px; letter-spacing:-.01em; line-height:1; }
+  .brand-name{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-weight:600; font-size:20px; letter-spacing:-.01em; line-height:1; }
   .brand-tag{ font-size:12px; color:var(--ink-faint); margin-top:3px; }
   .login-aside .brand-mark{ background:rgba(255,255,255,.14); color:#fff; box-shadow:none; border:1px solid rgba(255,255,255,.18); }
   .login-aside .brand-tag{ color:var(--hero-dim); }
@@ -246,7 +250,7 @@
   }
   .search-trigger:hover{ border-color:var(--border-strong); }
   .search-trigger kbd, .kbd{
-    font-family:'Inter',system-ui,sans-serif; font-size:11px; padding:2px 6px; border-radius:6px; border:1px solid var(--border-strong);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-size:11px; padding:2px 6px; border-radius:6px; border:1px solid var(--border-strong);
     background:var(--surface-2); color:var(--ink-dim); margin-left:auto;
   }
   .client-strip{ display:flex; align-items:center; gap:10px; margin-bottom:16px; padding:10px 12px; border-radius:var(--r-md); background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:12.5px; }
@@ -300,7 +304,7 @@
     width:38px; height:38px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;
     background:linear-gradient(145deg,var(--accent),var(--accent-strong)); color:var(--accent-ink);
   }
-  .avatar.lg{ width:64px; height:64px; font-size:24px; font-family:'Inter',system-ui,sans-serif; }
+  .avatar.lg{ width:64px; height:64px; font-size:24px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; }
   .sb-user .who{ min-width:0; flex:1; }
   .sb-user .who b{ display:block; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sb-user .who span{ font-size:11.5px; color:var(--ink-faint); }
@@ -319,7 +323,7 @@
   }
   .hero-top{ display:flex; justify-content:space-between; gap:16px; align-items:flex-start; }
   .hero-label{ font-size:12.5px; font-weight:600; color:var(--hero-dim); letter-spacing:.3px; }
-  .hero-value{ font-family:'Inter',system-ui,sans-serif; font-weight:600; font-size:clamp(32px,7vw,46px); line-height:1.05; margin-top:8px; letter-spacing:-.02em; }
+  .hero-value{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-weight:600; font-size:clamp(32px,7vw,46px); line-height:1.05; margin-top:8px; letter-spacing:-.02em; }
   .hero-sub{ font-size:13px; color:var(--hero-dim); margin-top:8px; }
   .hero-split{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:22px; }
   .hero-stat{ padding:12px 13px; border-radius:var(--r-md); background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.08); min-width:0; }
@@ -329,7 +333,7 @@
   .nextup .amt.fit1{ font-size:24px; } .nextup .amt.fit2{ font-size:20px; } .nextup .amt.fit3{ font-size:17px; }
   .next-amt.fit1{ font-size:17px; } .next-amt.fit2{ font-size:15px; } .next-amt.fit3{ font-size:13px; }
   .hero-value,.dsum-paid,.nextup .amt,.next-amt,.kpi-value,.stat .amt,.dstat .v,.hero-stat .v{ max-width:100%; white-space:nowrap; overflow:hidden; }
-  .hero-stat .v{ font-size:15px; font-weight:600; margin-top:3px; font-family:'Inter',system-ui,sans-serif; white-space:nowrap; overflow:hidden; }
+  .hero-stat .v{ font-size:15px; font-weight:600; margin-top:3px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; white-space:nowrap; overflow:hidden; }
   .ring{ position:relative; flex:none; }
   .ring svg{ display:block; transform:rotate(-90deg); }
   .ring .track{ stroke:rgba(255,255,255,.14); }
@@ -337,17 +341,17 @@
   .ring.on-surface .track{ stroke:var(--surface-3); }
   .ring.on-surface .prog{ stroke:var(--accent); }
   .ring-label{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1; }
-  .ring-label b{ font-family:'Inter',system-ui,sans-serif; font-size:24px; font-weight:600; }
+  .ring-label b{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-size:24px; font-weight:600; }
   .ring-label span{ font-size:10.5px; opacity:.7; margin-top:3px; font-weight:600; letter-spacing:.3px; text-transform:uppercase; }
 
   .next-card{ padding:22px; display:flex; flex-direction:column; }
   .next-eyebrow{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--ink-faint); display:flex; align-items:center; gap:7px; }
   .next-days{ display:flex; align-items:baseline; gap:8px; margin-top:14px; }
-  .next-days b{ font-family:'Inter',system-ui,sans-serif; font-size:56px; font-weight:600; line-height:.95; letter-spacing:-.03em; }
+  .next-days b{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-size:56px; font-weight:600; line-height:.95; letter-spacing:-.03em; }
   .next-days span{ font-size:14px; color:var(--ink-dim); font-weight:600; }
   .next-card.overdue .next-days b{ color:var(--bad); }
   .next-card.soon .next-days b{ color:var(--warn); }
-  .next-amt{ font-family:'Inter',system-ui,sans-serif; font-size:20px; font-weight:600; margin-top:16px; }
+  .next-amt{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-size:20px; font-weight:600; margin-top:16px; }
   .next-what{ margin-top:4px; font-size:13.5px; color:var(--ink-dim); }
   .next-what b{ color:var(--ink); }
   .next-foot{ margin-top:auto; padding-top:18px; }
@@ -362,14 +366,14 @@
   .kpi-ico.warn{ background:var(--warn-soft); color:var(--warn); }
   .kpi-ico.bad{ background:var(--bad-soft); color:var(--bad); }
   .kpi-ico.accent{ background:var(--accent-soft); color:var(--accent); }
-  .kpi-value{ font-family:'Inter',system-ui,sans-serif; font-size:clamp(20px,3.6vw,26px); font-weight:600; margin-top:12px; line-height:1.1; letter-spacing:-.01em; }
+  .kpi-value{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-size:clamp(20px,3.6vw,26px); font-weight:600; margin-top:12px; line-height:1.1; letter-spacing:-.01em; }
   .kpi-sub{ font-size:12px; color:var(--ink-faint); margin-top:5px; }
   .kpi.alert .kpi-value{ color:var(--bad); }
 
   /* cash-flow chart */
   .cf{ padding:8px 20px 18px; }
   .cf-readout{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:14px 0 6px; min-height:56px; }
-  .cf-readout .big{ font-family:'Inter',system-ui,sans-serif; font-size:24px; font-weight:600; }
+  .cf-readout .big{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-size:24px; font-weight:600; }
   .cf-readout .lbl{ font-size:12.5px; color:var(--ink-dim); }
   .cf-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -20px; padding:0 20px; scrollbar-width:thin; }
   .cf-chart{ display:flex; align-items:flex-end; gap:6px; min-width:560px; padding-top:8px; position:relative; }
@@ -406,7 +410,7 @@
   .alloc-row:hover .nm{ color:var(--accent); }
   .alloc-top{ display:flex; justify-content:space-between; gap:10px; margin-bottom:8px; font-size:13px; }
   .alloc-top .nm{ font-weight:600; transition:color .15s; }
-  .alloc-top .vl{ color:var(--ink-dim); font-family:'Inter',system-ui,sans-serif; font-size:12px; white-space:nowrap; }
+  .alloc-top .vl{ color:var(--ink-dim); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-size:12px; white-space:nowrap; }
   .alloc-legend{ display:flex; gap:16px; font-size:12px; color:var(--ink-dim); padding:14px 0 2px; }
   .dot{ width:9px; height:9px; border-radius:3px; display:inline-block; margin-right:6px; }
 
@@ -418,18 +422,20 @@
   .prow:first-child{ border-top:none; }
   .prow:hover{ background:var(--surface-2); }
   .datebox{
-    width:50px; height:52px; border-radius:12px; background:var(--surface-2); flex:none; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1;
+    width:46px; height:46px; border-radius:10px; background:var(--surface-2); flex:none; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1;
   }
-  .datebox b{ font-size:18px; font-family:'Inter',system-ui,sans-serif; font-weight:600; }
-  .datebox span{ font-size:9.5px; color:var(--ink-faint); text-transform:uppercase; margin-top:4px; letter-spacing:.5px; font-weight:700; }
+  .datebox b{ font-size:15px; font-weight:700; }
+  .datebox span{ font-size:8.5px; color:var(--ink-faint); text-transform:uppercase; margin-top:2px; letter-spacing:.3px; font-weight:400; }
   .datebox.overdue{ background:var(--bad-soft); } .datebox.overdue b{ color:var(--bad); }
   .datebox.soon{ background:var(--warn-soft); } .datebox.soon b{ color:var(--warn); }
   .datebox.paid{ background:var(--good-soft); } .datebox.paid b{ color:var(--good); }
   .prow-info{ flex:1; min-width:0; }
   .prow-prop{ font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .prow-ms{ font-size:12.5px; color:var(--ink-dim); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .prow-ms{ font-size:12px; color:var(--ink-dim); margin-top:2px; display:flex; align-items:center; gap:5px; min-width:0; }
+  .prow-ms span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  .prow-ms .ico{ flex:none; }
   .prow-amt{ text-align:right; flex:none; }
-  .prow-amt b{ display:block; font-family:'Inter',system-ui,sans-serif; font-size:13.5px; font-weight:600; white-space:nowrap; }
+  .prow-amt b{ display:block; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-size:13.5px; font-weight:600; white-space:nowrap; }
   .prow-amt span{ font-size:11px; color:var(--ink-faint); }
   .empty{ text-align:center; padding:44px 24px; color:var(--ink-dim); }
   .empty .e-ico{ width:52px; height:52px; margin:0 auto 14px; border-radius:16px; background:var(--surface-2); color:var(--ink-faint); display:flex; align-items:center; justify-content:center; }
@@ -460,7 +466,7 @@
   .summary-strip{ display:flex; gap:22px; flex-wrap:wrap; padding:14px 20px; margin-bottom:16px; }
   .summary-strip div{ min-width:0; }
   .summary-strip .k{ font-size:11px; color:var(--ink-faint); font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
-  .summary-strip .v{ font-family:'Inter',system-ui,sans-serif; font-size:19px; font-weight:600; margin-top:3px; }
+  .summary-strip .v{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-size:19px; font-weight:600; margin-top:3px; }
   .prop-grid{ display:grid; gap:14px; grid-template-columns:1fr; }
   .pcard{
     display:flex; flex-direction:column; gap:16px; text-align:left; padding:20px; cursor:pointer; width:100%; font:inherit; color:inherit;
@@ -664,7 +670,7 @@
   table.sheet tbody tr:first-child td{ border-top:none; }
   table.sheet td.wrap{ white-space:normal; min-width:170px; }
   table.sheet tbody tr:hover td{ background:var(--surface-2); }
-  table.sheet .num, table.sheet th.num{ font-family:'Inter',system-ui,sans-serif; font-variant-numeric:tabular-nums; text-align:right; }
+  table.sheet .num, table.sheet th.num{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-variant-numeric:tabular-nums; text-align:right; }
   table.sheet th.num{ font-family:'Inter',sans-serif; }
   table.sheet tr.clickable{ cursor:pointer; }
   .st{ font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.3px; display:inline-flex; align-items:center; gap:6px; }
@@ -687,13 +693,13 @@
   .stat .top i{ width:8px; height:8px; border-radius:50%; background:var(--ink-faint); }
   .stat.t-overdue .top i{ background:var(--bad); } .stat.t-soon .top i{ background:var(--warn); }
   .stat.t-upcoming .top i{ background:var(--info); } .stat.t-paid .top i{ background:var(--good); }
-  .stat .amt{ font-family:'Inter',system-ui,sans-serif; font-size:20px; font-weight:600; margin-top:9px; line-height:1.1; }
+  .stat .amt{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-size:20px; font-weight:600; margin-top:9px; line-height:1.1; }
   .stat .cnt{ font-size:12px; color:var(--ink-faint); margin-top:4px; }
   .stat.active{ border-color:var(--ink); box-shadow:0 0 0 1px var(--ink), var(--shadow); }
   .stat:last-child:nth-child(odd){ grid-column:1/-1; }
   .month-head{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:11px 20px; background:var(--surface-2); border-top:1px solid var(--border); font-size:12px; font-weight:700; color:var(--ink-dim); position:sticky; top:60px; z-index:3; }
   .month-head:first-child{ border-top:none; border-radius:var(--r-lg) var(--r-lg) 0 0; }
-  .month-head .sum{ font-family:'Inter',system-ui,sans-serif; font-weight:600; }
+  .month-head .sum{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; font-weight:600; }
   .list-card{ overflow:clip; }
   .range-inputs{ display:flex; gap:8px; flex-wrap:wrap; }
   .range-inputs label{ display:flex; flex-direction:column; gap:4px; font-size:11px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.5px; }
@@ -807,17 +813,72 @@
   @media (min-width:1200px){
     .prop-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
   }
+  /* ===== bottom sheets, pickers and small controls shared with the native app ===== */
+  .sq-btn{ width:46px; height:46px; flex:none; border-radius:var(--r-md); border:1px solid var(--border-strong); background:var(--surface); color:var(--ink-dim); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+  .sq-btn.on{ color:var(--accent); border-color:var(--accent); }
+  .range-btn{ display:inline-flex; align-items:center; gap:8px; min-height:46px; padding:0 12px; border-radius:var(--r-md); border:1px solid var(--border-strong); background:var(--surface); color:var(--ink); font-size:13px; font-weight:700; cursor:pointer; flex:none; max-width:190px; }
+  .range-btn span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:118px; }
+  .range-btn .ico{ color:var(--ink-dim); } .range-btn.on .ico:first-child{ color:var(--accent); }
+  .cur-btn{ display:inline-flex; align-items:center; gap:8px; min-height:40px; padding:0 14px; border-radius:var(--r-md); border:1px solid var(--border-strong); background:var(--surface); cursor:pointer; font-size:13.5px; }
+  .cur-btn .ico{ color:var(--ink-faint); }
+  .pw-toggle{ position:absolute; right:14px; top:0; bottom:0; background:none; border:none; color:var(--accent); font-weight:700; font-size:12.5px; cursor:pointer; }
+  .sheet-back{ position:fixed; inset:0; z-index:130; background:rgba(0,0,0,.45); display:flex; align-items:flex-end; justify-content:center; animation:fade .15s both; }
+  .sheet{ width:100%; max-width:560px; max-height:85vh; overflow-y:auto; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-xl) var(--r-xl) 0 0; padding:18px 18px calc(30px + env(safe-area-inset-bottom)); animation:sheet-up .25s var(--ease) both; }
+  @keyframes sheet-up{ from{ transform:translateY(30px); opacity:0; } to{ transform:none; opacity:1; } }
+  .sh-title{ font-size:15px; font-weight:700; margin-bottom:10px; }
+  .sh-opt{ display:flex; align-items:center; gap:10px; width:100%; padding:13px 12px; border:none; background:none; border-radius:var(--r-sm); font-size:15px; text-align:left; cursor:pointer; color:var(--ink); }
+  .sh-opt:hover{ background:var(--surface-2); }
+  .sh-opt.active{ background:var(--accent-soft); font-weight:700; }
+  .sh-opt .l{ flex:1; } .sh-opt .code{ width:52px; font-weight:700; } .sh-opt .code + .l{ color:var(--ink-dim); font-weight:400; }
+  .sh-opt .ico{ color:var(--accent); flex:none; }
+  .sh-list{ margin-top:10px; max-height:52vh; overflow-y:auto; }
+  .sh-empty{ padding:16px; text-align:center; color:var(--ink-faint); }
+  .sh-custom{ border-top:1px solid var(--border); margin-top:8px; padding-top:14px; }
+  .sh-cap{ font-size:11.5px; font-weight:700; letter-spacing:.7px; color:var(--ink-faint); margin-bottom:8px; }
+  .sh-dates{ display:flex; gap:10px; }
+  .sh-date{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; padding:10px 14px; border:1px solid var(--border-strong); border-radius:var(--r-md); background:var(--surface); }
+  .sh-date.on{ border-color:var(--accent); }
+  .sh-date span{ font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-faint); }
+  .sh-date input{ border:none; background:none; color:var(--ink); font:inherit; font-size:14px; font-weight:700; padding:0; min-width:0; width:100%; }
+  .sh-date input:focus{ outline:none; }
+  .sh-btns{ display:flex; gap:10px; margin-top:14px; } .sh-btns .btn{ flex:1; }
+  .mav{ width:34px; height:34px; border-radius:50%; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex:none; }
+  .sec-row{ display:flex; gap:12px; padding:16px; } .sec-row b{ display:block; font-size:14px; } .sec-row p{ font-size:13px; color:var(--ink-dim); line-height:1.45; margin-top:3px; }
+  .sec-ico{ width:34px; height:34px; border-radius:10px; background:var(--surface-2); color:var(--ink-dim); display:flex; align-items:center; justify-content:center; flex:none; }
+  .grp-card{ overflow:clip; }
+  .pref:first-child{ border-top:none; }
+  .logout-btn{ margin-top:24px; min-height:50px; }
+  .g-account .sect .sect-label{ margin-top:20px; }
+  .client-strip{ width:100%; border:none; text-align:left; cursor:pointer; font-family:inherit; }
+  .client-strip span{ font-weight:600; } .client-strip b{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13.5px; }
+  @media (min-width:900px){ .sheet-back{ align-items:center; } .sheet{ border-radius:var(--r-xl); padding-bottom:26px; } }
+  /* ===== phone layout = native app layout ===== */
+  @media (max-width:899px){
+    .page-head h1, .dhead h1{ font-size:28px; letter-spacing:-.5px; }
+    .page-head p{ font-size:14px; }
+    .hero{ padding:22px; border-radius:var(--r-xl); }
+    .hero-value{ font-size:34px; letter-spacing:-.8px; }
+    .next-days b{ font-size:52px; }
+    .statgrid{ display:flex; overflow-x:auto; gap:10px; padding-bottom:14px; margin:0 -16px 2px; padding-left:16px; padding-right:16px; scrollbar-width:none; }
+    .statgrid::-webkit-scrollbar{ display:none; }
+    .stat{ flex:none; width:140px; }
+    .stat .amt{ font-weight:700; }
+    .month-head{ position:static; }
+    .toolbar{ flex-wrap:nowrap; }
+    .toolbar .grow{ flex:1 1 auto; }
+    .list-card{ overflow:clip; }
+    .alloc-row{ padding:11px 0; }
+  }
   .hide-mobile-inline{ display:none; }
   @media (max-width:899px){ .refresh-btn{ display:none; } }
-  @media (max-width:420px){ .topbar-mobile-brand .brand-name{ display:none; } .topbar{ padding-left:12px; padding-right:12px; gap:8px; } .tools{ gap:6px; } .tools .icon-btn{ width:38px; height:38px; } }
-  .pref .select{ max-width:190px; } .pref{ flex-wrap:wrap; }
+  @media (max-width:420px){ .topbar{ padding-left:12px; padding-right:12px; gap:8px; } .tools{ gap:6px; } .tools .icon-btn{ width:38px; height:38px; } }
+  .pref{ flex-wrap:nowrap; } .pref .t{ min-width:0; flex:1; }
   @media (min-width:900px){ .hide-mobile-inline{ display:inline-flex; } .show-mobile-only{ display:none; } }
   @media (max-width:899px){
     .tools .hide-mobile{ display:none; }
   }
   @media (max-width:420px){
-    .hero-split{ grid-template-columns:1fr 1fr; }
-    .hero-split .hero-stat:nth-child(3){ grid-column:1/-1; }
+    .hero-split{ gap:8px; } .hero-stat{ padding:10px 10px; } .hero-stat .v{ font-size:14px; }
     .demo-grid{ grid-template-columns:1fr; }
     .hide-xs{ display:none; }
     .tools .seg button{ padding:0 9px; }
@@ -836,6 +897,7 @@
 <a class="skip-link" href="#main">Skip to content</a>
 <div id="app" aria-live="polite"></div>
 <div id="palette-root"></div>
+<div id="sheet-root"></div>
 <div id="toasts" role="status" aria-live="polite"></div>
 
 <script>
@@ -1289,14 +1351,14 @@
           '<form id="loginForm" novalidate>' +
             '<div class="field"><label for="email">Email</label><input class="input" id="email" type="email" autocomplete="username" inputmode="email" placeholder="you@email.com"></div>' +
             '<div class="field"><label for="password">Password</label><div class="input-wrap"><input class="input" id="password" type="password" autocomplete="current-password" placeholder="Your password" style="padding-right:48px">' +
-              '<button type="button" class="icon-btn" data-act="toggle-pw" aria-label="Show password">'+icon('eye','',18)+'</button></div></div>' +
+              '<button type="button" class="pw-toggle" data-act="toggle-pw" aria-label="Show password">Show</button></div></div>' +
             '<button class="btn btn-block" id="loginBtn" type="submit">Log in '+icon('arrowRight','',16,2)+'</button>' +
           '</form>' +
           '<div class="demo"><div class="demo-label">Try a demo account</div><div class="demo-grid">' +
             '<button type="button" class="demo-chip" data-act="demo" data-email="shukla.family.demo@example.com" data-pass="ShuklaPortfolio#2026!"><b>Investor</b><span>Shukla Family</span></button>' +
             '<button type="button" class="demo-chip" data-act="demo" data-email="ishlokchavan@gmail.com" data-pass="Portfolio#Admin2026!"><b>Agency admin</b><span>All clients</span></button>' +
           '</div></div>' +
-          '<div class="login-foot">'+icon('lock','',14)+'<span>Encrypted connection. Every investor only ever sees their own portfolio.</span></div>' +
+          '<div class="login-foot desk-only">'+icon('lock','',14)+'<span>Encrypted connection. Every investor only ever sees their own portfolio.</span></div>' +
         '</div></main>' +
       '</div>';
   }
@@ -1362,16 +1424,15 @@
     var tools =
       '<div class="tools">' +
         '<button class="search-trigger" data-act="palette" aria-label="Search and commands">'+icon('search','',16)+'Search…<kbd>'+(/Mac|iPhone|iPad/.test(navigator.platform||'') ? '⌘K' : 'Ctrl K')+'</kbd></button>' +
-        '<button class="icon-btn hide-desktop-search" data-act="palette" aria-label="Search" style="display:none">'+icon('search','',18)+'</button>' +
         '<button class="icon-btn refresh-btn'+(state.refreshing?' spin':'')+'" data-act="refresh" aria-label="Refresh data" title="Refresh data">'+icon('refresh','',18)+'</button>' +
-        '<button class="icon-btn'+(state.privacy?' on':'')+'" data-act="privacy" aria-pressed="'+state.privacy+'" aria-label="Hide amounts" title="'+(state.privacy?'Show amounts':'Hide amounts')+'">'+icon(state.privacy?'eyeOff':'eye','',18)+'</button>' +
+        '<button class="icon-btn desk-only'+(state.privacy?' on':'')+'" data-act="privacy" aria-pressed="'+state.privacy+'" aria-label="Hide amounts" title="'+(state.privacy?'Show amounts':'Hide amounts')+'">'+icon(state.privacy?'eyeOff':'eye','',18)+'</button>' +
         '<div class="seg seg-accent" role="group" aria-label="Currency">' +
           '<button data-act="currency" data-v="AED" class="'+(state.currency==='AED'?'active':'')+'" aria-pressed="'+(state.currency==='AED')+'">AED</button>' +
           '<button data-act="currency" data-v="'+state.secondary+'" class="'+(state.currency===state.secondary?'active':'')+'" aria-pressed="'+(state.currency===state.secondary)+'" title="'+esc((CUR_INFO[state.secondary]||{}).n||'')+' — change in Account">'+state.secondary+'</button></div>' +
       '</div>';
 
     var mobileClient = isAdmin && route.tab !== 'account'
-      ? '<div class="client-strip">'+icon('users','',16)+'<span>Client</span><select id="portfolioSwitchM" aria-label="Switch client">'+clientOptions+'</select></div>' : '';
+      ? '<button class="client-strip" data-act="sheet" data-k="client" aria-label="Switch client">'+icon('users','',16)+'<span>Client</span><b>'+esc(portfolio ? portfolio.name : 'Select client')+'</b>'+icon('chevron','',14)+'</button>' : '';
 
     app.innerHTML =
       '<div class="shell">' + sidebar +
@@ -1389,10 +1450,6 @@
           icon(n.ico,'nav-ico',22,1.8) + '<span>'+n.label+'</span>' +
           (n.id === 'payments' && od ? '<span class="nav-badge" aria-label="'+od+' overdue">'+od+'</span>' : '') + '</button>';
       }).join('') + '</nav>';
-
-    // the mobile search icon shows only below desktop width
-    var ms = app.querySelector('.hide-desktop-search');
-    if(ms && window.matchMedia('(max-width: 899px)').matches) ms.style.display = 'inline-flex';
 
     postRender();
     state.animate = false;
@@ -1454,10 +1511,9 @@
         '<div class="hero-top"><div style="min-width:0">' +
           '<div class="hero-label">Total portfolio value</div>' +
           '<div class="hero-value'+fitCls(fmtMoney(t.value))+'" data-count="'+t.value+'"'+(state.animate?' data-anim':'')+'>'+fmtMoney(t.value)+'</div>' +
-          '<div class="hero-sub">'+plural(state.properties.length,'property','properties')+' · '+(portfolio ? esc(portfolio.name) : '')+'</div></div>' +
+          '<div class="hero-sub">'+plural(state.properties.length,'property','properties')+'</div></div>' +
           ring(t.pct, 104, 10, '', 'paid') +
         '</div>' +
-        barFill(t.pct, 'lg on-hero') .replace('class="bar lg on-hero"','class="bar lg on-hero" style="margin-top:22px"') +
         '<div class="hero-split">' +
           '<div class="hero-stat"><div class="k">Paid to date</div><div class="v">'+fmtCompact(t.paid)+'</div></div>' +
           '<div class="hero-stat"><div class="k">Remaining</div><div class="v">'+fmtCompact(t.pending)+'</div></div>' +
@@ -1476,7 +1532,7 @@
           '<div class="next-days"><b>'+big+'</b><span>'+unit+'</span></div>' +
           '<div class="next-amt'+fitCls(fmtMoney(mAmt(nextPay)))+'">'+fmtMoney(mAmt(nextPay))+'</div>' +
           '<div class="next-what"><b>'+esc(np ? np.project_name : '')+'</b><br>'+esc(nextPay.milestone_event)+' · '+fmtDate(nextPay.due_date)+'</div>' +
-          '<div class="next-foot" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" data-act="ics-ms" data-id="'+esc(nextPay.id)+'">'+icon('calendar','',14)+' Remind me</button><button class="btn btn-ghost btn-sm" data-act="open-prop" data-id="'+esc(nextPay.property_id)+'" data-goto-sched="1">Schedule '+icon('arrowRight','',14,2)+'</button></div>' +
+          '<div class="next-foot desk-only" style="gap:8px;flex-wrap:wrap"><button class="btn btn-sm" data-act="ics-ms" data-id="'+esc(nextPay.id)+'">'+icon('calendar','',14)+' Remind me</button><button class="btn btn-ghost btn-sm" data-act="open-prop" data-id="'+esc(nextPay.property_id)+'" data-goto-sched="1">Schedule '+icon('arrowRight','',14,2)+'</button></div>' +
         '</section>';
     } else {
       nextCard = '<section class="card next-card"><div class="next-eyebrow">'+icon('clock','',14,2)+' Next payment</div>' +
@@ -1507,7 +1563,7 @@
       ? '<div class="big" id="cfBig">'+fmtMoney(sel.amt)+'</div><div class="lbl" id="cfLbl">'+esc(sel.full)+' · '+plural(sel.n,'payment')+'</div>'
       : '<div class="big" id="cfBig">'+fmtMoney(total12)+'</div><div class="lbl" id="cfLbl">due over the next 12 months</div>';
     var cashCard =
-      '<section class="card" aria-label="Payment forecast">' +
+      '<section class="card desk-only" aria-label="Payment forecast">' +
         '<div class="card-head"><div><div class="card-title">Payment forecast</div><div class="card-sub">What is due, month by month. Hover or tap a bar; select one to list its payments.</div></div></div>' +
         '<div class="cf"><div class="cf-readout">'+readout+'</div>' +
           '<div class="cf-scroll"><div class="cf-chart" id="cfChart">'+cfHtml+'</div></div>' +
@@ -1525,7 +1581,7 @@
       return '<button class="att" data-act="'+i.act+'" data-tab="'+esc(i.data)+'" data-v="'+esc(i.data)+'" data-id="'+esc(i.data)+'"><span class="att-ico '+i.tone+'">'+icon(i.ico,'',18)+'</span><span><b>'+esc(i.t)+'</b><span class="s">'+esc(i.s)+'</span></span><span class="chev">'+icon('chevronRight','',16)+'</span></button>';
     }).join('') + '</div>'
       : '<div class="all-clear"><div class="ok">'+icon('check','',22,2.4)+'</div>You are all caught up.</div>';
-    var attCard = '<section class="card" aria-label="Needs attention"><div class="card-head"><div><div class="card-title">Needs attention</div><div class="card-sub">Auto-sorted by urgency</div></div></div>'+attHtml+'</section>';
+    var attCard = sect('Needs attention', '<section class="card" aria-label="Needs attention">'+attHtml+'</section>');
 
     /* allocation */
     var maxVal = Math.max.apply(null, state.properties.map(function(p){ return Number(p.total_unit_price_aed||0); }).concat([1]));
@@ -1535,23 +1591,25 @@
         '<div style="display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--surface-2);width:'+Math.max(8, Math.round((paid+pend)/maxVal*100))+'%">' +
         '<div style="width:'+(paid+pend > 0 ? paid/(paid+pend)*100 : 0)+'%;background:var(--accent)"></div><div style="flex:1;background:var(--surface-3)"></div></div></button>';
     }).join('');
-    var allocCard = '<section class="card" aria-label="By property"><div class="card-head"><div><div class="card-title">By property</div><div class="card-sub">Bar length is relative to unit value</div></div><button class="link-btn" data-act="nav" data-to="properties">All '+icon('arrowRight','',14,2)+'</button></div>' +
-      '<div class="alloc">' + allocRows + '<div class="alloc-legend"><span><span class="dot" style="background:var(--accent)"></span>Paid</span><span><span class="dot" style="background:var(--surface-3)"></span>Remaining</span></div></div></section>';
+    var allocCard = sect('By property', '<section class="card" aria-label="By property"><div class="alloc">' + allocRows + '</div></section>');
 
     /* upcoming */
     var upcoming = state.milestones.filter(function(m){ return m.status !== 'Paid'; }).sort(byDue).slice(0, 5);
     var upHtml = upcoming.length ? upcoming.map(function(m){ return paymentRow(m, false); }).join('')
       : emptyState('check','Nothing upcoming','Every milestone on this portfolio is settled.');
-    var upCard = '<section class="card list-card" aria-label="Upcoming payments"><div class="card-head" style="padding-bottom:8px"><div><div class="card-title">Upcoming payments</div><div class="card-sub">Next '+upcoming.length+' by due date</div></div><button class="link-btn" data-act="nav" data-to="payments">View all '+icon('arrowRight','',14,2)+'</button></div>' + upHtml + '</section>';
+    var upCard = sect('Upcoming payments', '<section class="card list-card" aria-label="Upcoming payments">' + upHtml + '</section>');
 
     return (
-      '<div class="page-head"><div><h1>'+greeting()+', '+esc(firstName(state.profile.full_name))+'</h1><p>Here is where your portfolio stands today'+(state.currency!=='AED' ? ' · '+esc(rateLabel()) : '')+'.</p></div></div>' +
+      '<div class="page-head"><div><h1>'+greeting()+', '+esc(firstName(state.profile.full_name))+'</h1><p>'+(portfolio ? esc(portfolio.name)+' · ' : '')+'here is where your portfolio stands today.</p></div></div>' +
       '<div class="grid g-hero">' + hero + nextCard + '</div>' +
       kpis +
       '<div class="grid g-two">' + cashCard + attCard + '</div>' +
       '<div class="grid g-two even">' + allocCard + upCard + '</div>'
     );
   }
+
+  /* small uppercase label above a card — the native app's section header */
+  function sect(title, inner){ return '<div class="sect"><div class="sect-label">'+esc(title)+'</div>'+inner+'</div>'; }
 
   function cfDetail(c){
     if(!c || !c.items.length) return '<div class="cf-empty">Nothing due in ' + esc(c ? c.full : '') + '.</div>';
@@ -1572,13 +1630,13 @@
   function paymentRow(m, showDate){
     var p = propOf(m.property_id), st = milestoneState(m), d = daysUntil(m.due_date);
     var big, sub, cls = st === 'overdue' ? 'overdue' : st === 'soon' ? 'soon' : st === 'paid' ? 'paid' : '';
-    if(st === 'paid'){ big = icon('check','',20,2.4); sub = 'PAID'; }
+    if(st === 'paid'){ big = icon('check','',18,2.6); sub = 'PAID'; }
     else if(st === 'undecided'){ big = '—'; sub = 'TBC'; }
     else { big = Math.abs(d); sub = d < 0 ? 'LATE' : d === 0 ? 'TODAY' : d === 1 ? 'DAY' : 'DAYS'; }
     return '<button class="prow" data-act="open-prop" data-id="'+esc(m.property_id)+'" data-goto-sched="1">' +
       '<div class="datebox '+cls+'"><b>'+big+'</b><span>'+sub+'</span></div>' +
-      '<div class="prow-info"><div class="prow-prop">'+esc(p ? p.project_name : '')+'</div><div class="prow-ms">'+esc(m.milestone_event)+(showDate !== false && m.due_date ? ' · '+fmtDate(m.due_date) : '')+'</div></div>' +
-      '<div class="prow-amt"><b>'+fmtMoney(mAmt(m))+'</b><span>'+(m.due_date ? fmtDateShort(m.due_date) : 'Date TBC')+'</span></div>' +
+      '<div class="prow-info"><div class="prow-prop">'+esc(p ? p.project_name : '')+'</div><div class="prow-ms">'+icon('calendar','ico-dim',12)+'<span>'+esc(m.milestone_event)+(showDate && m.due_date ? ' · '+fmtDate(m.due_date) : '')+'</span></div></div>' +
+      '<div class="prow-amt"><b>'+fmtMoney(mAmt(m))+'</b></div>' +
     '</button>';
   }
 
@@ -1614,7 +1672,6 @@
         '<div style="min-width:0"><div class="pcard-name">'+esc(p.project_name)+'</div><div class="pcard-sub">'+esc(p.developer||'—')+' · '+esc(p.location||'—')+'</div></div>' +
         '</div>' +
       '<div class="facts">' + (p.status && !/construction/i.test(p.status) ? '<span class="pill">'+esc(p.status)+'</span>' : '') + (resale.eligible ? '<span class="pill good">'+icon('resale','',12,2)+' Resale ready</span>' : '') + '<span><b>'+esc(p.unit_type||'—')+'</b>'+(p.bedrooms?' · '+Math.trunc(p.bedrooms)+' BR':'')+'</span>' +
-        (p.size_sqft ? '<span><b>'+Math.round(p.size_sqft).toLocaleString('en-US')+'</b> sqft</span>' : '') +
         '<span>Handover <b>'+(p.handover_date ? fmtDate(p.handover_date) : '—')+'</b></span></div>' +
       '<div class="pcard-prog"><div class="row"><span><b>'+fmtMoney(p.total_paid_aed)+'</b> paid</span><span>'+Math.round(pct*100)+'% of '+fmtCompact(p.total_unit_price_aed)+'</span></div>' + barFill(pct) + '</div>' +
       nextHtml + '</button>';
@@ -1639,10 +1696,8 @@
     var tt = portfolioTotals();
     return '<div class="page-head"><div><h1>Properties</h1><p>'+plural(state.properties.length,'unit')+' · '+fmtCompact(tt.value)+' total · '+Math.round(tt.pct*100)+'% paid</p></div></div>' +
       '<div class="toolbar">' +
-        '<div class="input-wrap has-ico grow">'+icon('search','',18)+'<input class="input" id="propSearch" type="search" placeholder="Search name, developer or location" value="'+esc(state.propQuery)+'" aria-label="Search properties"></div>' +
-        '<select class="select" id="propSort" aria-label="Sort properties">' +
-          [['handover','Handover: soonest'],['value','Value: highest'],['progress','Most paid'],['name','Name: A–Z']].map(function(o){ return '<option value="'+o[0]+'"'+(state.propSort===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('') +
-        '</select></div>' +
+        '<div class="input-wrap has-ico grow">'+icon('search','',18)+'<input class="input" id="propSearch" type="search" placeholder="Search properties" value="'+esc(state.propQuery)+'" aria-label="Search properties"></div>' +
+        '<button class="sq-btn'+(state.propSort!=='handover'?' on':'')+'" data-act="sheet" data-k="sort" aria-label="Sort properties" title="Sort">'+icon('filter','',18)+'</button></div>' +
       (chips ? '<div class="chips" role="group" aria-label="Filter by status">'+chips+'</div>' : '') +
       '<div id="propResults">'+propertyResults()+'</div>';
   }
@@ -1759,9 +1814,9 @@
         '<div class="loc"><span class="meta-ico">'+icon('developer','ico-dim',15)+esc(p.developer||'—')+'</span><span class="meta-ico">'+icon('location','ico-dim',15)+esc(p.location||'—')+'</span>'+(p.unit_no?'<span class="meta-ico">'+icon('home','ico-dim',15)+'Unit '+esc(p.unit_no)+'</span>':'')+'</div>' +
         '<div class="pills">'+pills+'</div></div>' +
         '<div class="dactions">' +
-          '<button class="btn btn-ghost btn-sm" data-act="ics-prop" data-id="'+esc(p.id)+'">'+icon('calendar','',15)+' Add to calendar</button>' +
-          '<button class="btn btn-ghost btn-sm" data-act="share-prop" data-id="'+esc(p.id)+'">'+icon('share','',15)+' Share</button>' +
-          '<button class="btn btn-ghost btn-sm hide-mobile-inline" data-act="print">'+icon('print','',15)+' Print</button></div></div>';
+          '<button class="btn btn-ghost btn-sm desk-only" data-act="ics-prop" data-id="'+esc(p.id)+'">'+icon('calendar','',15)+' Add to calendar</button>' +
+          '<button class="btn btn-ghost btn-sm" data-act="share-prop" data-id="'+esc(p.id)+'">Share summary</button>' +
+          '<button class="btn btn-ghost btn-sm desk-only" data-act="print">'+icon('print','',15)+' Print</button></div></div>';
 
     // summary card
     var paidAmt = Number(p.total_paid_aed||0), pendAmt = Number(p.total_pending_aed||0);
@@ -1796,9 +1851,9 @@
       : renderOverview(p, ms, resale);
 
     return (
-      '<div class="crumbs"><button data-act="nav" data-to="properties">'+icon('arrowLeft','',16,2)+' Properties</button><span>/</span><span class="cur">'+esc(p.project_name)+'</span></div>' +
+      '<div class="crumbs"><button data-act="nav" data-to="properties">'+icon('arrowLeft','',16,2)+' Properties</button><span class="desk-only">/</span><span class="cur desk-only">'+esc(p.project_name)+'</span></div>' +
       head + summary + tabs + '<div id="detailBody">' + content + '</div>' +
-      (state.properties.length > 1 ? '<div style="display:flex;justify-content:flex-end;margin-top:22px"><button class="btn btn-ghost" data-act="open-prop" data-id="'+esc(nextP.id)+'">Next: '+esc(nextP.project_name)+' '+icon('arrowRight','',16,2)+'</button></div>' : '')
+      (state.properties.length > 1 ? '<div class="desk-only" style="justify-content:flex-end;margin-top:22px"><button class="btn btn-ghost" data-act="open-prop" data-id="'+esc(nextP.id)+'">Next: '+esc(nextP.project_name)+' '+icon('arrowRight','',16,2)+'</button></div>' : '')
     );
   }
 
@@ -1812,7 +1867,7 @@
       nextCard = '<section class="card nextup"><div class="nextup-top"><div class="card-title">Next payment</div><span class="pill '+STATE_PILL[st]+'">'+(st==='overdue' ? Math.abs(d)+' days overdue' : relDays(d))+'</span></div>' +
         '<h3>'+esc(nm.milestone_event)+'</h3><div class="when">Due '+fmtDate(nm.due_date)+(nm.pct!=null ? ' · '+fmtPct(nm.pct)+' of price' : '')+'</div>' +
         '<div class="amt'+fitCls(fmtMoney(mAmt(nm)))+'">'+fmtMoney(mAmt(nm))+'<small>+ VAT '+fmtCompact(nm.vat_aed)+'</small></div>' +
-        '<div class="nextup-actions"><button class="btn btn-sm" data-act="ics-ms" data-id="'+esc(nm.id)+'">'+icon('calendar','',15)+' Remind me</button><button class="btn btn-ghost btn-sm" data-act="prop-tab" data-v="schedule">Full schedule</button></div></section>';
+        '<div class="nextup-actions desk-only"><button class="btn btn-sm" data-act="ics-ms" data-id="'+esc(nm.id)+'">'+icon('calendar','',15)+' Remind me</button><button class="btn btn-ghost btn-sm" data-act="prop-tab" data-v="schedule">Full schedule</button></div></section>';
     } else {
       var undated = ms.filter(function(m){ return m.status !== 'Paid' && !m.due_date; }).length;
       nextCard = '<section class="card nextup"><div class="card-title">Next payment</div><div style="margin-top:14px;color:var(--ink-dim);line-height:1.55">'+(undated ? plural(undated,'remaining milestone')+' still waiting for a confirmed due date.' : 'Everything on this unit is paid. Nothing further is due.')+'</div></section>';
@@ -1856,7 +1911,7 @@
     return '<div class="d-cols">' +
       '<div class="stackc">' + nextCard + journeyCard + '</div>' +
       '<div class="stackc"><section class="card"><div class="section-h">'+icon('resale','',14)+' Resale readiness</div><div style="padding-bottom:4px">'+resaleCard+'</div></section>' +
-        '<section class="card"><div class="section-h">'+icon('calendar','',14)+' Key dates</div>'+kdHtml+'</section>' + notes + '</div></div>';
+        '<section class="card desk-only"><div class="section-h">'+icon('calendar','',14)+' Key dates</div>'+kdHtml+'</section>' + notes + '</div></div>';
   }
 
   function renderSchedule(p, ms){
@@ -1869,7 +1924,7 @@
     }, { amount:0, vat:0, total:0, paid:0, out:0 });
 
     var head = '<div class="tl-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px"><div><div class="card-title">'+b.paid.length+' of '+ms.length+' milestones paid</div><div class="card-sub">'+fmtMoney(p.total_paid_aed)+' paid · '+fmtMoney(p.total_pending_aed)+' remaining</div></div>' +
-      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" data-act="ics-prop" data-id="'+esc(p.id)+'">'+icon('calendar','',15)+' Add to calendar</button>' +
+      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-ghost btn-sm desk-only" data-act="ics-prop" data-id="'+esc(p.id)+'">'+icon('calendar','',15)+' Add to calendar</button>' +
       '<div class="seg" role="group" aria-label="Schedule view"><button data-act="tl-view" data-v="timeline" class="'+(state.tlView==='timeline'?'active':'')+'">'+icon('list','',15)+' Grouped</button><button data-act="tl-view" data-v="table" class="'+(state.tlView==='table'?'active':'')+'">'+icon('table','',15)+' Table</button></div></div></div>';
 
     if(state.tlView === 'table'){
@@ -2021,7 +2076,7 @@
       return '<div class="card">'+ (filtered ? emptyState('search','No payments match', (tab === 'undecided' && state.payRange !== 'all') ? 'Milestones without a date can only be listed under “All time”.' : 'Nothing in this tab fits the current search or filters.','<button class="btn btn-ghost btn-sm" data-act="clear-pay-filters">Clear filters</button>') : emptyState(def.empty[0], def.empty[1], def.empty[2])) + '</div>';
     }
     var meta = '<div class="results-meta"><span>'+plural(list.length,'payment')+' · <b class="mono" style="color:var(--ink)">'+fmtMoney(sumAmt(list))+'</b>'+(rangeLabel() ? ' · <span class="rl">'+esc(rangeLabel())+'</span>' : '')+(rangeBounds() && state.payTab === 'undecided' ? '' : '')+'</span>' +
-      '<span style="display:flex;gap:14px">'+(state.payTab === 'paid' ? '' : '<button class="link-btn" data-act="ics-list">'+icon('calendar','',14,2)+' Add to calendar</button>')+'<button class="link-btn" data-act="export">'+icon('download','',14,2)+' Export CSV</button></span></div>';
+      '<span class="desk-only" style="gap:14px">'+(state.payTab === 'paid' ? '' : '<button class="link-btn" data-act="ics-list">'+icon('calendar','',14,2)+' Add to calendar</button>')+'<button class="link-btn" data-act="export">'+icon('download','',14,2)+' Export CSV</button></span></div>';
 
     if(state.payView === 'table'){
       var rows = list.map(function(m){
@@ -2046,7 +2101,7 @@
       map[key].items.push(m);
     });
     return meta + '<div class="card list-card">' + groups.map(function(g){
-      return '<div class="month-head"><span>'+esc(g.label)+' · '+plural(g.items.length,'payment')+'</span><span class="sum">'+fmtMoney(sumAmt(g.items))+'</span></div>' + g.items.map(function(m){ return paymentRow(m, false); }).join('');
+      return '<div class="month-head"><span>'+esc(g.label)+' · '+plural(g.items.length,'payment')+'</span><span class="sum">'+fmtMoney(sumAmt(g.items))+'</span></div>' + g.items.map(function(m){ return paymentRow(m, true); }).join('');
     }).join('') + '</div>';
   }
 
@@ -2059,14 +2114,13 @@
     }).join('');
 
     return '<div class="page-head"><div><h1>Payments</h1><p>Every milestone across your portfolio, in one place.</p></div>' +
-        '<div class="seg" role="group" aria-label="View"><button data-act="pay-view" data-v="list" class="'+(state.payView==='list'?'active':'')+'">'+icon('list','',15)+' List</button><button data-act="pay-view" data-v="table" class="'+(state.payView==='table'?'active':'')+'">'+icon('table','',15)+' Table</button></div></div>' +
+        '<div class="seg desk-only" role="group" aria-label="View"><button data-act="pay-view" data-v="list" class="'+(state.payView==='list'?'active':'')+'">'+icon('list','',15)+' List</button><button data-act="pay-view" data-v="table" class="'+(state.payView==='table'?'active':'')+'">'+icon('table','',15)+' Table</button></div></div>' +
       '<div class="statgrid" id="payStats">'+stats+'</div>' +
       '<div class="toolbar">' +
         '<div class="input-wrap has-ico grow">'+icon('search','',18)+'<input class="input" id="paySearch" type="search" placeholder="Search milestone or property" value="'+esc(state.payQuery)+'" aria-label="Search payments"></div>' +
-        '<select class="select" id="payProp" aria-label="Filter by property"><option value="all">All properties</option>' +
+        '<select class="select desk-only" id="payProp" aria-label="Filter by property"><option value="all">All properties</option>' +
           state.properties.map(function(p){ return '<option value="'+esc(p.id)+'"'+(state.payProp===p.id?' selected':'')+'>'+esc(p.project_name)+'</option>'; }).join('') + '</select>' +
-        '<select class="select" id="payRange" aria-label="Date range">' + RANGES.map(function(r){ return '<option value="'+r[0]+'"'+(state.payRange===r[0]?' selected':'')+'>'+r[1]+'</option>'; }).join('') + '</select>' +
-        (state.payRange === 'custom' ? '<div class="range-inputs"><label>From<input class="input" type="date" id="payFrom" value="'+esc(state.payFrom)+'"'+(state.payTo?' max="'+esc(state.payTo)+'"':'')+'></label><label>To<input class="input" type="date" id="payTo" value="'+esc(state.payTo)+'"'+(state.payFrom?' min="'+esc(state.payFrom)+'"':'')+'></label></div>' : '') +
+        '<button class="range-btn'+(state.payRange!=='all'?' on':'')+'" data-act="sheet" data-k="range" aria-label="Filter by date range">'+icon('calendar','',15)+'<span>'+esc(rangeText())+'</span>'+icon('chevron','',13)+'</button>' +
       '</div>' +
       '<div id="payResults">'+paymentsResults()+'</div>';
   }
@@ -2115,37 +2169,80 @@
         : '<div class="access-row"><span class="avatar" style="width:34px;height:34px;font-size:12px">'+esc(initials(pf.name))+'</span><span class="nm">'+esc(pf.name)+'</span><span class="pill good">Member</span></div>';
     }).join('');
 
+    var appearance = [['light','sun',''],['dark','moon',''],['system','monitor','Auto']].map(function(o){
+      return '<button data-act="theme" data-v="'+o[0]+'" class="'+(state.theme===o[0]?'active':'')+'" aria-pressed="'+(state.theme===o[0])+'" aria-label="'+({light:'Light',dark:'Dark',system:'Auto'})[o[0]]+'">'+icon(o[1],'',14)+(o[2] ? '<span>'+o[2]+'</span>' : '')+'</button>';
+    }).join('');
+    function group(title, inner, cls){ return sect(title, '<div class="card grp-card'+(cls?' '+cls:'')+'">'+inner+'</div>'); }
+    var access2 = state.portfolios.map(function(pf, i){
+      var cur = pf.id === state.currentPortfolioId;
+      var inner = '<span class="mav">'+esc(initials(pf.name))+'</span><span class="nm">'+esc(pf.name)+'</span>' + (isAdmin ? (cur ? '<span class="pill accent">Viewing</span>' : '<span class="chev ico-dim">'+icon('chevronRight','',16)+'</span>') : '<span class="pill good">Member</span>');
+      return isAdmin ? '<button class="access-row" data-act="switch-client" data-id="'+esc(pf.id)+'">'+inner+'</button>' : '<div class="access-row">'+inner+'</div>';
+    }).join('');
+
     return '<div class="page-head"><div><h1>Account</h1><p>Your profile, preferences and access.</p></div></div>' +
+      '<div class="card profile"><div class="avatar lg">'+esc(initials(p.full_name))+'</div><div style="min-width:0;flex:1"><h2>'+esc(p.full_name)+'</h2><p>'+esc(p.email)+'</p><div style="margin-top:10px"><span class="pill '+(isAdmin?'info':'accent')+'">'+(isAdmin?'Agency admin':'Investor')+'</span></div></div>' +
+        '<button class="btn btn-danger hide-mobile-inline" data-act="logout">'+icon('logout','',16)+' Log out</button></div>' +
       '<div class="g-account">' +
-        '<div class="card profile span2"><div class="avatar lg">'+esc(initials(p.full_name))+'</div><div style="min-width:0;flex:1"><h2>'+esc(p.full_name)+'</h2><p>'+esc(p.email)+'</p><div style="margin-top:10px"><span class="pill '+(isAdmin?'info':'accent')+'">'+(isAdmin?'Agency admin':'Investor')+'</span></div></div>' +
-          '<button class="btn btn-danger hide-mobile-inline" data-act="logout">'+icon('logout','',16)+' Log out</button></div>' +
-
-        '<div class="card"><div class="card-head" style="padding-bottom:6px"><div class="card-title">Preferences</div></div>' +
-          '<div class="pref"><div class="t"><b>Appearance</b><span>Match your device or choose a theme</span></div><div class="seg" role="group" aria-label="Theme">' +
-            themeOpts.map(function(o){ return '<button data-act="theme" data-v="'+o[0]+'" class="'+(state.theme===o[0]?'active':'')+'" aria-pressed="'+(state.theme===o[0])+'" title="'+o[2]+'">'+icon(o[1],'',15)+'<span class="hide-xs"> '+o[2]+'</span></button>'; }).join('') + '</div></div>' +
+        group('Preferences',
+          '<div class="pref"><div class="t"><b>Appearance</b><span>Match your device or choose a theme</span></div><div class="seg" role="group" aria-label="Theme">'+appearance+'</div></div>' +
           '<div class="pref"><div class="t"><b>Primary currency</b><span>AED — all figures are stored in dirhams</span></div><span class="pill accent">Default</span></div>' +
-          '<div class="pref"><div class="t"><b>Secondary currency</b><span>'+esc(rateLabel(state.secondary))+' · '+esc(ratesNote())+'</span></div>' +
-            '<select class="select" id="secondarySelect" aria-label="Secondary currency">' + CURRENCIES.filter(function(x){ return x.c !== 'AED'; }).map(function(x){ return '<option value="'+x.c+'"'+(state.secondary===x.c?' selected':'')+'>'+x.c+' · '+esc(x.n)+'</option>'; }).join('') + '</select></div>' +
-          '<div class="pref"><div class="t"><b>Data</b><span>'+(state.updatedAt ? 'Updated '+new Date(state.updatedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : 'Live from your portfolio')+'</span></div><button class="btn btn-ghost btn-sm" data-act="refresh">'+icon('refresh','',14)+' Refresh</button></div>' +
-          '<div class="pref"><div class="t"><b>Hide amounts</b><span>Mask every figure — handy in public</span></div><button class="switch" role="switch" data-act="privacy" aria-checked="'+state.privacy+'" aria-label="Hide amounts"></button></div>' +
-        '</div>' +
-
-        '<div class="card"><div class="card-head" style="padding-bottom:6px"><div><div class="card-title">'+(isAdmin?'Client portfolios':'Portfolio access')+'</div><div class="card-sub">'+(isAdmin?'Tap a client to switch the whole app to their portfolio.':'You can only see portfolios you were added to.')+'</div></div></div>' +
-          '<div style="padding-top:10px">'+(access || '<div class="empty-note" style="padding:20px;color:var(--ink-faint)">No portfolios assigned yet.</div>')+'</div></div>' +
-
-        '<div class="card"><div class="card-head" style="padding-bottom:6px"><div class="card-title">Security</div></div>' +
-          '<div class="callout" style="margin-top:14px"><span class="c-ico">'+icon('lock','',18)+'</span><div><b>Isolated at the database</b><p>Row-level security means even a direct request for another client\'s data is rejected by the server — not just hidden in the app.</p></div></div></div>' +
-
-        '<div class="card"><div class="card-head" style="padding-bottom:6px"><div class="card-title">Shortcuts</div></div><div class="shortcuts">' +
+          '<div class="pref"><div class="t"><b>Secondary currency</b><span>'+esc(rateLabel(state.secondary))+' · '+esc(ratesNote())+'</span></div><button class="cur-btn" data-act="sheet" data-k="secondary" aria-label="Choose secondary currency"><b>'+esc(state.secondary)+'</b>'+icon('chevron','',13)+'</button></div>' +
+          '<div class="pref desk-only"><div class="t"><b>Data</b><span>'+(state.updatedAt ? 'Updated '+new Date(state.updatedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : 'Live from your portfolio')+'</span></div><button class="btn btn-ghost btn-sm" data-act="refresh">'+icon('refresh','',14)+' Refresh</button></div>' +
+          '<div class="pref desk-only"><div class="t"><b>Hide amounts</b><span>Mask every figure — handy in public</span></div><button class="switch" role="switch" data-act="privacy" aria-checked="'+state.privacy+'" aria-label="Hide amounts"></button></div>') +
+        group(isAdmin ? 'Client portfolios' : 'Portfolio access', access2 || '<div class="empty-note" style="padding:18px;color:var(--ink-faint)">No portfolios assigned yet.</div>') +
+        group('Security', '<div class="sec-row"><span class="sec-ico">'+icon('lock','',17)+'</span><div><b>Isolated at the database</b><p>Row-level security means even a direct request for another client\'s data is rejected by the server — not just hidden in the app.</p></div></div>') +
+        sect('Shortcuts', '<div class="card desk-only"><div class="shortcuts">' +
           '<div class="sc"><span>Search &amp; commands</span><span class="kbd">'+mod+' K</span></div>' +
           '<div class="sc"><span>Go to Overview / Properties / Payments</span><span class="kbd">g o · g p · g y</span></div>' +
           '<div class="sc"><span>Toggle hide amounts</span><span class="kbd">h</span></div>' +
-          '<div class="sc"><span>Switch currency</span><span class="kbd">c</span></div></div></div>' +
-
-        '<div class="span2"><button class="btn btn-danger btn-block show-mobile-only" data-act="logout" style="margin-top:4px">'+icon('logout','',16)+' Log out</button>' +
-        '<p class="about" style="margin-top:14px">Ledger · Amounts in lists exclude VAT unless marked</p></div>' +
-      '</div>';
+          '<div class="sc"><span>Switch currency</span><span class="kbd">c</span></div></div></div>').replace('<div class="sect">','<div class="sect desk-only">') +
+      '</div>' +
+      '<button class="btn btn-danger btn-block logout-btn" data-act="logout">Log out</button>';
   }
+
+  /* ---------------- BOTTOM SHEETS (same pickers as the native app) ---------------- */
+  var SORTS = [['handover','Handover: soonest'],['value','Value: highest'],['progress','Most paid'],['name','Name: A–Z']];
+  var sheet = { type:null, q:'', ret:null };
+  function rangeText(){
+    if(state.payRange === 'custom'){
+      if(state.payFrom && state.payTo) return fmtDateShort(state.payFrom) + ' – ' + fmtDateShort(state.payTo);
+      if(state.payFrom) return 'From ' + fmtDateShort(state.payFrom);
+      if(state.payTo) return 'Until ' + fmtDateShort(state.payTo);
+      return 'Custom range';
+    }
+    var r = RANGES.filter(function(x){ return x[0] === state.payRange; })[0];
+    return r ? r[1] : 'All time';
+  }
+  function sheetOpt(k, v, label, active, sub){
+    return '<button class="sh-opt'+(active?' active':'')+'" data-act="sheet-pick" data-k="'+k+'" data-v="'+esc(v)+'"><span class="l">'+esc(label)+'</span>'+(sub ? '<span class="s">'+esc(sub)+'</span>' : '')+(active ? icon('check','',16,2.4) : '')+'</button>';
+  }
+  function secondaryList(){
+    var q = sheet.q.trim().toLowerCase();
+    var list = CURRENCIES.filter(function(x){ return x.c !== 'AED' && (!q || (x.c + ' ' + x.n).toLowerCase().indexOf(q) !== -1); });
+    return list.length ? list.map(function(x){ return '<button class="sh-opt'+(state.secondary===x.c?' active':'')+'" data-act="sheet-pick" data-k="secondary" data-v="'+x.c+'"><span class="code">'+x.c+'</span><span class="l">'+esc(x.n)+'</span>'+(state.secondary===x.c ? icon('check','',16,2.4) : '')+'</button>'; }).join('')
+      : '<div class="sh-empty">No matching currency.</div>';
+  }
+  function drawSheet(){
+    var root = document.getElementById('sheet-root'), t = sheet.type, body = '', title = '';
+    if(!t){ root.innerHTML = ''; return; }
+    if(t === 'sort'){ title = 'Sort by'; body = SORTS.map(function(o){ return sheetOpt('sort', o[0], o[1], state.propSort === o[0]); }).join(''); }
+    else if(t === 'client'){ title = 'Switch client'; body = state.portfolios.map(function(pf){ return sheetOpt('client', pf.id, pf.name, pf.id === state.currentPortfolioId); }).join(''); }
+    else if(t === 'secondary'){
+      title = 'Secondary currency';
+      body = '<div class="input-wrap has-ico">'+icon('search','',18)+'<input class="input" id="sheetSearch" type="search" placeholder="Search currency" autocomplete="off" value="'+esc(sheet.q)+'" aria-label="Search currency"></div><div class="sh-list" id="sheetList">'+secondaryList()+'</div>';
+    } else if(t === 'range'){
+      title = 'Date range';
+      body = RANGES.filter(function(r){ return r[0] !== 'custom'; }).map(function(r){ return sheetOpt('range', r[0], r[1], state.payRange === r[0]); }).join('') +
+        '<div class="sh-custom"><div class="sh-cap">CUSTOM RANGE</div><div class="sh-dates">' +
+          '<label class="sh-date'+(state.payRange==='custom'?' on':'')+'"><span>From</span><input type="date" id="payFrom" value="'+esc(state.payFrom)+'"'+(state.payTo?' max="'+esc(state.payTo)+'"':'')+'></label>' +
+          '<label class="sh-date'+(state.payRange==='custom'?' on':'')+'"><span>To</span><input type="date" id="payTo" value="'+esc(state.payTo)+'"'+(state.payFrom?' min="'+esc(state.payFrom)+'"':'')+'></label></div>' +
+          '<div class="sh-btns"><button class="btn btn-ghost" data-act="range-clear">Clear</button><button class="btn" data-act="sheet-close">Done</button></div></div>';
+    }
+    root.innerHTML = '<div class="sheet-back" id="sheetBack"><div class="sheet" role="dialog" aria-modal="true" aria-label="'+esc(title)+'"><div class="sh-title">'+esc(title)+'</div>'+body+'</div></div>';
+    var si = document.getElementById('sheetSearch'); if(si) si.focus();
+  }
+  function openSheet(t){ sheet.type = t; sheet.q = ''; sheet.ret = document.activeElement; drawSheet(); }
+  function closeSheet(){ sheet.type = null; drawSheet(); if(sheet.ret && sheet.ret.focus) try { sheet.ret.focus(); } catch(e){} }
 
   /* ---------------- TOASTS ---------------- */
   function toast(msg){
@@ -2280,6 +2377,17 @@
     'clear-pay-filters': function(){ state.payQuery = ''; state.payRange = 'all'; state.payFrom = ''; state.payTo = ''; state.payProp = 'all'; render(); },
     'prop-tab': function(el){ state.propTab = el.getAttribute('data-v'); render(); },
     'tl-view': function(el){ state.tlView = el.getAttribute('data-v'); render(); },
+    sheet: function(el){ openSheet(el.getAttribute('data-k')); },
+    'sheet-close': function(){ closeSheet(); },
+    'sheet-pick': function(el){
+      var k = el.getAttribute('data-k'), v = el.getAttribute('data-v');
+      closeSheet();
+      if(k === 'sort'){ state.propSort = v; render(); }
+      else if(k === 'range'){ state.payRange = v; state.payFrom = ''; state.payTo = ''; render(); }
+      else if(k === 'client'){ switchClient(v); }
+      else if(k === 'secondary'){ setSecondary(v); }
+    },
+    'range-clear': function(){ state.payRange = 'all'; state.payFrom = ''; state.payTo = ''; closeSheet(); render(); },
     export: function(){ exportCsv(); },
     'ics-prop': function(el){ var id = el.getAttribute('data-id'), p = propOf(id); downloadIcs(state.milestones.filter(function(m){ return m.property_id === id; }), 'ledger-' + String(p ? p.project_name : 'payments').toLowerCase().replace(/[^a-z0-9]+/g,'-') + '.ics'); },
     'ics-ms': function(el){ var id = el.getAttribute('data-id'); downloadIcs(state.milestones.filter(function(m){ return m.id === id; }), 'ledger-payment-reminder.ics'); },
@@ -2296,7 +2404,7 @@
     },
     'toggle-pw': function(el){
       var inp = document.getElementById('password'), show = inp.type === 'password';
-      inp.type = show ? 'text' : 'password'; el.innerHTML = icon(show ? 'eyeOff' : 'eye','',18); el.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      inp.type = show ? 'text' : 'password'; el.textContent = show ? 'Hide' : 'Show'; el.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
     },
     demo: function(el){
       document.getElementById('email').value = el.getAttribute('data-email');
@@ -2310,8 +2418,9 @@
     var pi = e.target.closest && e.target.closest('[data-pi]');
     if(pi){ paletteRun(Number(pi.getAttribute('data-pi'))); return; }
     if(pal.open && e.target.id === 'palBack'){ closePalette(); return; }
+    if(sheet.type && e.target.id === 'sheetBack'){ closeSheet(); return; }
     var el = e.target.closest && e.target.closest('[data-act]');
-    if(!el || !app.contains(el)) return;
+    if(!el || !(app.contains(el) || document.getElementById('sheet-root').contains(el))) return;
     var fn = actions[el.getAttribute('data-act')];
     if(fn){ if(el.tagName === 'A') e.preventDefault(); fn(el, e); }
   });
@@ -2328,6 +2437,7 @@
   document.addEventListener('input', function(e){
     var id = e.target.id;
     if(id === 'palInput'){ pal.q = e.target.value; pal.idx = 0; paletteFilter(); return; }
+    if(id === 'sheetSearch'){ sheet.q = e.target.value; var sl = document.getElementById('sheetList'); if(sl) sl.innerHTML = secondaryList(); return; }
     if(id === 'propSearch'){
       state.propQuery = e.target.value;
       clearTimeout(debounceT); debounceT = setTimeout(function(){ var r = document.getElementById('propResults'); if(r) r.innerHTML = propertyResults(); }, 90);
@@ -2342,7 +2452,7 @@
     else if(id === 'secondarySelect'){ setSecondary(v); }
     else if(id === 'payProp'){ state.payProp = v; refreshPayments(); }
     else if(id === 'payRange'){ state.payRange = v; if(v === 'custom' && !state.payFrom && !state.payTo){ state.payFrom = isoDate(TODAY); state.payTo = isoDate(addDays(TODAY, 30)); } render(); }
-    else if(id === 'payFrom' || id === 'payTo'){ if(id === 'payFrom') state.payFrom = v; else state.payTo = v; refreshPayments(); }
+    else if(id === 'payFrom' || id === 'payTo'){ if(id === 'payFrom') state.payFrom = v; else state.payTo = v; state.payRange = 'custom'; render(); var b = document.querySelector('#sheetBack .sh-custom'); if(b){ drawSheet(); } }
     else if(id === 'portfolioSwitch' || id === 'portfolioSwitchM'){ switchClient(v); }
   });
 
@@ -2380,6 +2490,7 @@
   var chord = null, chordT = null;
   document.addEventListener('keydown', function(e){
     if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){ e.preventDefault(); pal.open ? closePalette() : openPalette(); return; }
+    if(sheet.type && e.key === 'Escape'){ e.preventDefault(); closeSheet(); return; }
     if(pal.open){
       if(e.key === 'Escape'){ e.preventDefault(); closePalette(); }
       else if(e.key === 'ArrowDown'){ e.preventDefault(); pal.idx = (pal.idx + 1) % Math.max(1, pal.items.length); paletteDraw(); }
