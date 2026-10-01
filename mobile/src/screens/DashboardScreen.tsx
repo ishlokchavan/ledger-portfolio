@@ -186,7 +186,11 @@ export function DashboardScreen() {
           <Kpi
             label="Remaining"
             value={compact(totals.pending)}
-            sub={`across ${plural(buckets.overdue.length + buckets.soon.length + buckets.upcoming.length + buckets.undecided.length, 'milestone')}`}
+            sub={
+              buckets.overdue.length + buckets.soon.length + buckets.upcoming.length + buckets.undecided.length
+                ? `across ${plural(buckets.overdue.length + buckets.soon.length + buckets.upcoming.length + buckets.undecided.length, 'milestone')}`
+                : 'no payment schedule added yet'
+            }
             icon="payments"
             tone="accent"
           />

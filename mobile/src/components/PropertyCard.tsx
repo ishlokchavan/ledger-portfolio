@@ -9,6 +9,7 @@ import type { Currency, PaymentMilestone, Property } from '../types';
 export function PropertyCard({
   property,
   next,
+  hasSchedule = true,
   currency,
   fxRate,
   onPress,
@@ -16,6 +17,8 @@ export function PropertyCard({
   property: Property;
   /** Earliest unpaid dated milestone for this property, if any. */
   next: PaymentMilestone | null;
+  /** False when the property has no payment milestones on file at all. */
+  hasSchedule?: boolean;
   currency: Currency;
   fxRate: number;
   onPress: () => void;
@@ -75,7 +78,7 @@ export function PropertyCard({
             </>
           ) : (
             <Text style={{ flex: 1, color: colors.inkDim, fontSize: 12.5 }}>
-              {Number(property.total_pending_aed) > 0 ? 'Remaining milestones have no date yet' : 'Fully paid'}
+              {Number(property.total_pending_aed) > 0 ? (hasSchedule ? 'Remaining milestones have no date yet' : 'Payment schedule not added yet') : 'Fully paid'}
             </Text>
           )}
         </View>

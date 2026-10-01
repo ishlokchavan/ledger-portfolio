@@ -589,7 +589,7 @@ export function PropertyDetailScreen({ route }: Props) {
           </View>
         )}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 12, borderTopWidth: 1, borderColor: colors.border }}>
-          <Stat k="Remaining" v={compact(pendAmt)} s={`${plural(ms.length - buckets.paid.length, 'milestone')} left`} />
+          <Stat k="Remaining" v={compact(pendAmt)} s={ms.length ? `${plural(ms.length - buckets.paid.length, 'milestone')} left` : pendAmt > 0 ? 'no schedule added yet' : 'nothing left'} />
           <Stat
             k="Next payment"
             v={next ? relDays(nd) : buckets.undecided.length ? 'Date TBC' : 'None'}
@@ -597,7 +597,7 @@ export function PropertyDetailScreen({ route }: Props) {
             color={stateColor(nextState)}
           />
           <Stat k="Handover" v={property.handover_date ? (hoDays !== null && hoDays >= 0 ? relDays(hoDays).replace('In ', '') : 'Handed over') : '—'} s={fmtDate(property.handover_date)} />
-          <Stat k="Resale" v={!resale.applicable ? 'Not allowed' : resale.eligible ? 'Eligible' : 'Not yet'} s={resale.applicable ? `NOC at ${fmtPct(resale.reqPct)} paid` : 'Per contract'} />
+          <Stat k="Resale" v={resale.unknown ? 'Not recorded' : !resale.applicable ? 'Not allowed' : resale.eligible ? 'Eligible' : 'Not yet'} s={resale.applicable ? `NOC at ${fmtPct(resale.reqPct)} paid` : resale.unknown ? 'NOC terms not added' : 'Per contract'} />
         </View>
       </Card>
 
@@ -645,7 +645,9 @@ export function PropertyDetailScreen({ route }: Props) {
                 <Text style={{ color: colors.inkDim, fontSize: 14, marginTop: 12, lineHeight: 21 }}>
                   {buckets.undecided.length
                     ? `${plural(buckets.undecided.length, 'remaining milestone')} still waiting for a confirmed due date.`
-                    : 'Everything on this unit is paid. Nothing further is due.'}
+                    : ms.length === 0 && pendAmt > 0
+                      ? 'No payment schedule has been added for this unit yet, so there is no next payment to show.'
+                      : 'Everything on this unit is paid. Nothing further is due.'}
                 </Text>
               )}
             </Card>
@@ -659,7 +661,9 @@ export function PropertyDetailScreen({ route }: Props) {
 
             <SectionCard title="Resale readiness" icon="resale">
               {!resale.applicable ? (
-                <Text style={{ color: colors.inkDim, fontSize: 13.5, lineHeight: 20, marginTop: 8 }}>This unit&apos;s contract does not allow resale at this stage.</Text>
+                <Text style={{ color: colors.inkDim, fontSize: 13.5, lineHeight: 20, marginTop: 8 }}>{resale.unknown
+                    ? 'Resale terms are not recorded. Add the developer’s resale NOC requirement to see eligibility and a forecast date.'
+                    : 'This unit’s contract does not allow resale at this stage.'}</Text>
               ) : (
                 <>
                   <View style={{ marginTop: 28 }}>

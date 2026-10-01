@@ -1175,7 +1175,7 @@
 
   function resaleEligibility(p){
     var applicable = String(p.resale_applicable||'').toUpperCase() === 'YES';
-    if(!applicable) return { applicable:false, eligible:false };
+    if(!applicable) return { applicable:false, eligible:false, unknown: !String(p.resale_applicable||'').trim() };
     var req = Number(p.resale_noc_pct||0), pd = paidPct(p);
     return { applicable:true, eligible: pd >= req, reqPct:req, paidPct:pd };
   }
@@ -1575,7 +1575,7 @@
     var kpis =
       '<div class="grid g-kpi">' +
         '<div class="card kpi"><div class="kpi-top"><span class="kpi-label">Paid to date</span><span class="kpi-ico good">'+icon('check','',16,2.2)+'</span></div><div class="kpi-value">'+fmtCompact(t.paid)+'</div><div class="kpi-sub">'+fmtPct(t.pct)+' of total value</div></div>' +
-        '<div class="card kpi"><div class="kpi-top"><span class="kpi-label">Remaining</span><span class="kpi-ico accent">'+icon('wallet','',16)+'</span></div><div class="kpi-value">'+fmtCompact(t.pending)+'</div><div class="kpi-sub">across '+plural(b.overdue.length + b.soon.length + b.upcoming.length + b.undecided.length,'milestone')+'</div></div>' +
+        '<div class="card kpi"><div class="kpi-top"><span class="kpi-label">Remaining</span><span class="kpi-ico accent">'+icon('wallet','',16)+'</span></div><div class="kpi-value">'+fmtCompact(t.pending)+'</div><div class="kpi-sub">'+((b.overdue.length + b.soon.length + b.upcoming.length + b.undecided.length) ? 'across '+plural(b.overdue.length + b.soon.length + b.upcoming.length + b.undecided.length,'milestone') : 'no payment schedule added yet')+'</div></div>' +
         '<button class="card kpi'+(od.length?' alert':'')+'" data-act="pay-tab" data-tab="'+(od.length?'overdue':'soon')+'"><div class="kpi-top"><span class="kpi-label">'+(od.length?'Overdue':'Due in 30 days')+'</span><span class="kpi-ico '+(od.length?'bad':'warn')+'">'+icon(od.length?'alert':'clock','',16)+'</span></div>' +
           '<div class="kpi-value">'+fmtCompact(sumAmt(od.length ? od : b.soon))+'</div><div class="kpi-sub">'+plural((od.length ? od : b.soon).length,'payment')+'</div></button>' +
         '<button class="card kpi" data-act="prop-filter-go" data-v="resale"><div class="kpi-top"><span class="kpi-label">Resale-ready</span><span class="kpi-ico good">'+icon('resale','',16)+'</span></div><div class="kpi-value">'+resaleReady.length+' <span style="font-size:14px;color:var(--ink-faint);font-family:Inter">of '+state.properties.length+'</span></div><div class="kpi-sub">eligible for resale NOC</div></button>' +
@@ -1697,7 +1697,7 @@
     var pct = paidPct(p), resale = resaleEligibility(p), nm = nextMilestone(p.id), ns = nm ? milestoneState(nm) : null;
     var nextHtml = nm
       ? '<div class="pcard-next '+(ns==='overdue'?'overdue':ns==='soon'?'soon':'')+'"><i></i><div class="t"><b>'+relDays(daysUntil(nm.due_date))+'</b> · '+esc(nm.milestone_event)+'</div><span class="amt">'+fmtCompact(mAmt(nm))+'</span></div>'
-      : '<div class="pcard-next done"><i></i><div class="t">'+(Number(p.total_pending_aed) > 0 ? 'Remaining milestones have no date yet' : 'Fully paid')+'</div></div>';
+      : '<div class="pcard-next done"><i></i><div class="t">'+(Number(p.total_pending_aed) > 0 ? (state.milestones.some(function(m){ return m.property_id === p.id; }) ? 'Remaining milestones have no date yet' : 'Payment schedule not added yet') : 'Fully paid')+'</div></div>';
     return '<button class="card pcard" data-act="open-prop" data-id="'+esc(p.id)+'">' +
       '<div class="pcard-head"><span class="p-ico">'+icon('building','',20)+'</span>' +
         '<div style="min-width:0"><div class="pcard-name">'+esc(p.project_name)+'</div><div class="pcard-sub">'+esc(p.developer||'—')+' · '+esc(p.location||'—')+'</div></div>' +
@@ -1865,10 +1865,10 @@
       '<section class="card dsum"><div class="dsum-top"><div><div class="dsum-paid'+fitCls(fmtMoney(p.total_paid_aed))+'">'+fmtMoney(p.total_paid_aed)+'</div><div class="dsum-of">paid of '+fmtMoney(p.total_unit_price_aed)+'</div></div><span class="dsum-pct">'+Math.round(pct*100)+'% paid</span></div>' +
       segBar +
       '<div class="dstats">' +
-        '<div class="dstat"><div class="k">Remaining</div><div class="v">'+fmtCompact(p.total_pending_aed)+'</div><div class="s">'+plural(ms.length - b.paid.length,'milestone')+' left</div></div>' +
+        '<div class="dstat"><div class="k">Remaining</div><div class="v">'+fmtCompact(p.total_pending_aed)+'</div><div class="s">'+(ms.length ? plural(ms.length - b.paid.length,'milestone')+' left' : (Number(p.total_pending_aed) > 0 ? 'no schedule added yet' : 'nothing left'))+'</div></div>' +
         '<div class="dstat"><div class="k">Next payment</div><div class="v '+(ns==='overdue'?'bad':ns==='soon'?'warn':'')+'">'+(nm ? relDays(nd) : (b.undecided.length ? 'Date TBC' : 'None'))+'</div><div class="s">'+(nm ? fmtCompact(mAmt(nm)) + ' · ' + fmtDateShort(nm.due_date) : '—')+'</div></div>' +
         '<div class="dstat"><div class="k">Handover</div><div class="v">'+(p.handover_date ? (hoDays >= 0 ? relMonths(p.handover_date).replace(/^in /,'') : 'Handed over') : '—')+'</div><div class="s">'+fmtDate(p.handover_date)+'</div></div>' +
-        '<div class="dstat"><div class="k">Resale</div><div class="v '+(resale.eligible?'':'')+'">'+(!resale.applicable ? 'Not allowed' : resale.eligible ? 'Eligible' : 'Not yet')+'</div><div class="s">'+(resale.applicable ? 'NOC at '+fmtPct(resale.reqPct)+' paid' : 'Per contract')+'</div></div>' +
+        '<div class="dstat"><div class="k">Resale</div><div class="v '+(resale.eligible?'':'')+'">'+(resale.unknown ? 'Not recorded' : !resale.applicable ? 'Not allowed' : resale.eligible ? 'Eligible' : 'Not yet')+'</div><div class="s">'+(resale.applicable ? 'NOC at '+fmtPct(resale.reqPct)+' paid' : resale.unknown ? 'NOC terms not added' : 'Per contract')+'</div></div>' +
       '</div></section>';
 
     var tabDefs = [['overview','Overview'],['schedule','Payment schedule',b.paid.length+'/'+ms.length],['financials','Financials'],['details','Details']];
@@ -1901,7 +1901,7 @@
         '<div class="nextup-actions desk-only"><button class="btn btn-sm" data-act="ics-ms" data-id="'+esc(nm.id)+'">'+icon('calendar','',15)+' Remind me</button><button class="btn btn-ghost btn-sm" data-act="prop-tab" data-v="schedule">Full schedule</button></div></section>';
     } else {
       var undated = ms.filter(function(m){ return m.status !== 'Paid' && !m.due_date; }).length;
-      nextCard = '<section class="card nextup"><div class="card-title">Next payment</div><div style="margin-top:14px;color:var(--ink-dim);line-height:1.55">'+(undated ? plural(undated,'remaining milestone')+' still waiting for a confirmed due date.' : 'Everything on this unit is paid. Nothing further is due.')+'</div></section>';
+      nextCard = '<section class="card nextup"><div class="card-title">Next payment</div><div style="margin-top:14px;color:var(--ink-dim);line-height:1.55">'+(undated ? plural(undated,'remaining milestone')+' still waiting for a confirmed due date.' : (!ms.length && Number(p.total_pending_aed) > 0 ? 'No payment schedule has been added for this unit yet, so there is no next payment to show.' : 'Everything on this unit is paid. Nothing further is due.'))+'</div></section>';
     }
 
     // Journey
@@ -1911,7 +1911,9 @@
     // Resale
     var resaleCard;
     if(!resale.applicable){
-      resaleCard = '<div class="callout"><span class="c-ico">'+icon('resale','',18)+'</span><div><b>Resale not permitted</b><p>This unit\'s contract does not allow resale at this stage.</p></div></div>';
+      resaleCard = resale.unknown
+        ? '<div class="callout"><span class="c-ico">'+icon('resale','',18)+'</span><div><b>Resale terms not recorded</b><p>Add the developer\'s resale NOC requirement to see eligibility and a forecast date.</p></div></div>'
+        : '<div class="callout"><span class="c-ico">'+icon('resale','',18)+'</span><div><b>Resale not permitted</b><p>This unit\'s contract does not allow resale at this stage.</p></div></div>';
     } else {
       var paidP = Math.min(1, resale.paidPct), req = Math.min(1, resale.reqPct);
       var fcText = resale.eligible ? 'You can request a resale NOC today.'

@@ -55,7 +55,7 @@ export const STATE_LABEL: Record<MilestoneState, string> = {
 
 export function resaleEligibility(p: Property): ResaleEligibility {
   const applicable = String(p.resale_applicable || '').toUpperCase() === 'YES';
-  if (!applicable) return { applicable: false, eligible: false };
+  if (!applicable) return { applicable: false, eligible: false, unknown: !String(p.resale_applicable || '').trim() };
   const reqPct = Number(p.resale_noc_pct || 0);
   const paidPct = Number(p.total_unit_price_aed) > 0 ? Number(p.total_paid_aed || 0) / Number(p.total_unit_price_aed) : 0;
   return { applicable: true, eligible: paidPct >= reqPct, reqPct, paidPct };

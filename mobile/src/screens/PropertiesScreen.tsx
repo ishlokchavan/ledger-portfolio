@@ -121,6 +121,7 @@ export function PropertiesScreen({ navigation }: Props) {
           <PropertyCard
             property={item}
             next={nextMilestone(milestones, item.id)}
+            hasSchedule={milestones.some((m) => m.property_id === item.id)}
             currency={currency}
             fxRate={fxRate}
             onPress={() => navigation.navigate('PropertyDetail', { propertyId: item.id })}

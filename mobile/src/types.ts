@@ -93,6 +93,8 @@ export type ThemePreference = ThemeMode | 'system';
 export interface ResaleEligibility {
   applicable: boolean;
   eligible: boolean;
+  /** resale_applicable was never recorded (as opposed to explicitly 'NO'). */
+  unknown?: boolean;
   reqPct?: number;
   paidPct?: number;
 }
