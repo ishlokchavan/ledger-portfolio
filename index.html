@@ -237,6 +237,7 @@
   .demo-label{ font-size:11px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.7px; margin-bottom:10px; display:flex; align-items:center; gap:10px; }
   .demo-label::after{ content:""; flex:1; height:1px; background:var(--border); }
   .demo-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .demo-grid .demo-chip:nth-child(3){ grid-column:1 / -1; }
   .demo-chip{
     text-align:left; padding:12px 13px; border-radius:var(--r-md); border:1px solid var(--border); background:var(--surface);
     cursor:pointer; transition:border-color .15s, transform .12s var(--ease), box-shadow .15s;
@@ -1388,6 +1389,7 @@
           '<div class="demo"><div class="demo-label">Try a demo account</div><div class="demo-grid">' +
             '<button type="button" class="demo-chip" data-act="demo" data-email="shukla.family.demo@example.com" data-pass="ShuklaPortfolio#2026!"><b>Investor</b><span>Shukla Family</span></button>' +
             '<button type="button" class="demo-chip" data-act="demo" data-email="ishlokchavan@gmail.com" data-pass="Portfolio#Admin2026!"><b>Agency admin</b><span>All clients</span></button>' +
+            '<button type="button" class="demo-chip" data-act="demo" data-email="aneesh.bansal@example.com"><b>Aneesh Bansal</b><span>Client · enter password</span></button>' +
           '</div></div>' +
           '<div class="login-foot desk-only">'+icon('lock','',14)+'<span>Encrypted connection. Every investor only ever sees their own portfolio.</span></div>' +
         '</div></main>' +
@@ -2456,8 +2458,10 @@
     },
     demo: function(el){
       document.getElementById('email').value = el.getAttribute('data-email');
-      document.getElementById('password').value = el.getAttribute('data-pass');
-      document.getElementById('loginBtn').focus();
+      var pass = el.getAttribute('data-pass');
+      // Chips without a password only fill the email: client credentials are never embedded in this public page.
+      if(pass){ document.getElementById('password').value = pass; document.getElementById('loginBtn').focus(); }
+      else { document.getElementById('password').value = ''; document.getElementById('password').focus(); }
     }
   };
 
